@@ -1,0 +1,46 @@
+
+This is
+
+*** SORTIMG ***
+
+program. This tool is intended for rapid image resizing and slight editation.
+
+
+
+How to build under GNU/Linux:
+
+ - install QT4 development package (qt4-dev or qt4-devel package on most systems)
+ - run 'qmake' ('/usr/lib64/qt4/bin/qmake' on some systems) in the sources directory
+ - run 'make'
+ - run 'make install' as root (e.g. 'sudo make install')
+ - run 'sortimg' from any directory to run the program
+ 
+ 
+How to build under Windows:
+
+ - install latest QT4/MinGW from http://download.qt.io/archive/qt/
+   (e.g. http://download.qt.io/archive/qt/4.8/4.8.6/qt-opensource-windows-x86-mingw482-4.8.6-1.exe )
+ - during the installation, choose to download MinGW and unpack it
+ - modify environment variables (My Computer -> Properties -> Advanced -> Environment variables):
+   QTDIR=C:\Qt\4.?.?; QMAKESPEC=win32-g++; PATH+=C:\Qt\4.?.?\bin;C:\mingw32\bin (please check the paths)
+ - run 'qmake' and 'make' in the sortimg directory - this will produce debug\sortimg.exe (not portable)
+
+
+
+Copyright (C) Libor Peltan 2015
+
+ This program is free software: you can redistribute it and/or modify
+ it under the terms of the GNU General Public License as published by
+ the Free Software Foundation, either version 3 of the License, or
+ (at your option) any later version.
+
+ This program is distributed in the hope that it will be useful,
+ but WITHOUT ANY WARRANTY; without even the implied warranty of
+ MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ GNU General Public License for more details.
+
+ You should have received a copy of the GNU General Public License
+ along with this program.  If not, see <http://www.gnu.org/licenses/>.
+
+
+
