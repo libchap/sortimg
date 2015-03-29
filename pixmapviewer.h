@@ -8,6 +8,10 @@
 
 #include "si_globals.h"
 
+// a widget for viewing a pixmap
+// resizing it to fit the widget size of needed
+// center the image
+
 // FIXME public -> protected ?
 class PixmapViewer : public QLabel {
 Q_OBJECT
@@ -20,11 +24,11 @@ public slots:
 
 
   void resizeEvent(QResizeEvent* event); // override, event
-  
+
   //QSize minimumSize() { return QSize(1024,768); } // override, QWidget
 
 private:
-  
+
 
 protected:
   QPixmap original_pixmap;
@@ -36,4 +40,3 @@ protected:
 
 
 #endif // #ifndef _PIXMAPVIEWER_H_
-

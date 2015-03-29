@@ -4,6 +4,7 @@
 using std::min;
 using std::max;
 
+// counter-clockwise
 static QImage * rotate90(const QImage * src) {
     QImage * dst = new QImage(src->height(), src->width(), src->format());
     for (int y=0;y<src->height();++y) {
@@ -25,20 +26,16 @@ static QImage * rotate270(const QImage * src) {
     return dst;
 }
 
-static void saveExifModified(const QString & targetJpeg, QExifImageHeader * exif, const QSize & jpegSize) {
-  QExifValue backup_orientation = exif->value(QExifImageHeader::Orientation),
-             backup_pixelXdim = exif->value(QExifImageHeader::PixelXDimension),
-             backup_pixelYdim = exif->value(QExifImageHeader::PixelYDimension);
+// fix orientation and resolution tags in exif according to current situation
+// save the exif to the jpeg file created by QImage::save
+static void saveExifModified(const QString & targetJpeg, const StupidExif & exif, const QSize & jpegSize) {
+  StupidExif temp_exif(exif);
 
-  exif->setValue(QExifImageHeader::Orientation, QExifValue(quint32(1)));
-  exif->setValue(QExifImageHeader::PixelXDimension, QExifValue(quint32(jpegSize.width())));
-  exif->setValue(QExifImageHeader::PixelYDimension, QExifValue(quint32(jpegSize.height())));
+  temp_exif.setTagOrientation(1);
+  temp_exif.setTagXResolution(jpegSize.width());
+  temp_exif.setTagYResolution(jpegSize.height());
 
-  exif->saveToJpeg(targetJpeg);
-
-  exif->setValue(QExifImageHeader::Orientation, backup_orientation);
-  exif->setValue(QExifImageHeader::PixelXDimension, backup_pixelXdim);
-  exif->setValue(QExifImageHeader::PixelYDimension, backup_pixelYdim);
+  temp_exif.insert_into_jpeg(targetJpeg);
 }
 
 static QImage * loadImageFromJpeg(QString jpegName, int rotate) {
@@ -52,14 +49,14 @@ static QImage * loadImageFromJpeg(QString jpegName, int rotate) {
     case 2:
       qir = rotate270(qi);
       delete qi;
-      break;
+      break;  // FIXME: missing case 3 ?
     default:
       qir = qi;
   }
   return qir;
 }
 
-
+// grab original (unresized) image data from a QFuture, apply SCR on it (rotate, resize, crop)
 static QImage * scaleCropImage(QFuture<QImage *> & futureOriginal, ScaleCropRule scr, bool fast) {
   QImage * rotated = futureOriginal.result();
   qDebug() << "Rotating: " << scr.ini_rot;
@@ -94,8 +91,8 @@ static QImage * scaleCropImage(QFuture<QImage *> & futureOriginal, ScaleCropRule
   return cropped;
 }
 
-
-static bool scaleCropToFile(QFuture<QImage *> & futureOriginal, ScaleCropRule scr, bool fast, QString target, QExifImageHeader * exif) {
+// the same as before but save the result into file (together with provided exif)
+static bool scaleCropToFile(QFuture<QImage *> & futureOriginal, ScaleCropRule scr, bool fast, QString target, const StupidExif & exif) {
   QImage * sced = scaleCropImage(futureOriginal, scr, fast);
   sced->save(target, 0, si_settings_output_jpeg_quality);
   //QFile::copy(target, target + ".woExif.jpg"); // debug
@@ -106,14 +103,12 @@ static bool scaleCropToFile(QFuture<QImage *> & futureOriginal, ScaleCropRule sc
 
 
 
-
+// load image and exif from a file, load the unresized original image data into QFuture
 ImageBuffer::IBData::IBData(const QString & filename) : exifData(filename) {
   int rotate = 0;
-  if (exifData.contains(QExifImageHeader::Orientation)) {
-    switch (exifData.value(QExifImageHeader::Orientation).toShort()) {
-      case 6: rotate = 1; break;
-      case 8: rotate = 3; break;
-    }
+  switch (exifData.getTagOrientation()) {
+    case 6: rotate = 1; break;
+    case 8: rotate = 3; break;
   }
 
   originalImage = QtConcurrent::run(loadImageFromJpeg, filename, rotate);
@@ -129,7 +124,7 @@ ImageBuffer::IBData::~IBData() {
   waitForFileRescaling();
 }
 
-
+// for the loaded image, run the rescale in the baground to be (possibly) used later
 void ImageBuffer::IBData::prepareSC(ScaleCropRule scr, bool fast) {
   QString scrs = scr.toString();
   qDebug() << "prepare: " << scrs;
@@ -140,6 +135,7 @@ void ImageBuffer::IBData::prepareSC(ScaleCropRule scr, bool fast) {
   );
 }
 
+// grab the prepared resized image (resize immediately if not prepared)
 QImage * ImageBuffer::IBData::getSC(ScaleCropRule scr) {
   QString scrs = scr.toString();
   qDebug() << "get: " << scrs;
@@ -150,6 +146,7 @@ QImage * ImageBuffer::IBData::getSC(ScaleCropRule scr) {
   return rescales[scrs].result();
 }
 
+// cleanup. for the sake of not having to many different resizes in the memory
 void ImageBuffer::IBData::unprepareSC(ScaleCropRule scr) {
   QString scrs = scr.toString();
   if (!rescales.contains(scrs)) return;
@@ -158,14 +155,14 @@ void ImageBuffer::IBData::unprepareSC(ScaleCropRule scr) {
 }
 
 
-
+// "prepareSC" into a file
 void ImageBuffer::IBData::fileSC(ScaleCropRule scr, const QString & targetFile) {
   waitForFileRescaling();
   fileRescalingRunning = true;
-  fileRescaling = QtConcurrent::run(scaleCropToFile, originalImage, scr, false, targetFile, &exifData);
+  fileRescaling = QtConcurrent::run(scaleCropToFile, originalImage, scr, false, targetFile, exifData);
 }
 
-
+// check if all the fileSC have finished, wait if not
 void ImageBuffer::IBData::waitForFileRescaling() {
   if (fileRescalingRunning) {
     bool stuff = fileRescaling.result();
@@ -176,11 +173,9 @@ void ImageBuffer::IBData::waitForFileRescaling() {
 
 QSize ImageBuffer::IBData::getOriginalSize() {
   int w, h;
-  if (exifData.contains(QExifImageHeader::PixelXDimension) && exifData.contains(QExifImageHeader::PixelYDimension)) {
-    w = (int) exifData.value(QExifImageHeader::PixelXDimension).toLong();
-    h = (int) exifData.value(QExifImageHeader::PixelYDimension).toLong();
-  }
-  else {
+  w = exifData.getTagXResolution();
+  h = exifData.getTagYResolution();
+  if (w == 0 || h == 0) {
     w = originalImage.result()->width();
     h = originalImage.result()->height();
   }

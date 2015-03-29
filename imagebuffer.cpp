@@ -10,6 +10,7 @@ ImageBuffer::~ImageBuffer() {
   }
 }
 
+// add image file to image buffer, prepare default SCR if specified
 void ImageBuffer::addImage(const QString & fileName) {
   if (!fileName.isEmpty() && !images.contains(fileName)) {
     images.insert(fileName, new IBData(fileName));
@@ -33,6 +34,7 @@ void ImageBuffer::removeImage(const QString & fileName) {
   }
 }
 
+// prepareSC wrapper for IBData
 void ImageBuffer::prepareRescale(const QString & fileName, ScaleCropRule scr) {
   if (scr.scale_w > 0 && !fileName.isEmpty() && images.contains(fileName)) {
     //qDebug() << "Preparing rescale (" << fileName << ") to : " << scr.toString();
@@ -40,6 +42,7 @@ void ImageBuffer::prepareRescale(const QString & fileName, ScaleCropRule scr) {
   }
 }
 
+// fileSC wraper for IBData
 void ImageBuffer::rescaleToFile(const QString & fileName, ScaleCropRule scr, const QString & targetFile) {
   if (scr.scale_w > 0 && !fileName.isEmpty() && images.contains(fileName)) {
     images[fileName]->fileSC(scr, targetFile);
@@ -52,7 +55,7 @@ void ImageBuffer::waitForFileRescales() {
   }
 }
 
-
+// getSC wraper for IBData
 QImage * ImageBuffer::getRescaled(const QString & fileName, ScaleCropRule scr) {
   //qDebug() << "getRescaled: " << fileName << "; " << scr.toString() << "; " << images.contains(fileName);
   if (scr.scale_w > 0 && !fileName.isEmpty() && images.contains(fileName)) {
@@ -61,11 +64,10 @@ QImage * ImageBuffer::getRescaled(const QString & fileName, ScaleCropRule scr) {
   else return NULL;
 }
 
+// getOriginalSIze wrapper for IBData
 QSize ImageBuffer::getOriginalSize(const QString & fileName) {
   if (!fileName.isEmpty() && images.contains(fileName)) {
     return images[fileName]->getOriginalSize();
   }
   return QSize(0, 0);
 }
-
-

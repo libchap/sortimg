@@ -6,6 +6,13 @@
 #include <QString>
 #include <QRect>
 
+// the information struct
+// keeping instructions how the image shall be (in this order):
+// 1) rotated
+// 2) resized
+// 3) cropped
+//
+// also some methods easing difficult manipulations, following the user's needs
 
 
 struct ScaleCropRule {
@@ -44,4 +51,3 @@ struct ScaleCropRule {
 };
 
 #endif // #ifndef _SCR_H_
-

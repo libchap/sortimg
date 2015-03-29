@@ -6,6 +6,8 @@ PixmapViewer::PixmapViewer(const QPixmap & p) : original_pixmap(p) {
   update_pixmap();
 }
 
+// resize the pixmap to fit the widget if needed (shall be rare)
+// actually view the resulting pixmap
 void PixmapViewer::update_pixmap() {
   QSize mySize = size(), opSize = original_pixmap.size();
   if (mySize.width() == opSize.width() || mySize.height() == opSize.height()) { // no need to rescale
@@ -31,5 +33,3 @@ void PixmapViewer::changePixmap(const QPixmap & p) {
   update_pixmap();
   qDebug() << "PixmapViewer pixmap changed (" << size2string(p.size()) << ")";
 }
-
-

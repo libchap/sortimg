@@ -14,9 +14,12 @@ class ImageBuffer;
 #include "si_globals.h"
 #include "filebank.h"
 
-#include "qtopia_exif/qexifimageheader.h"
+#include "stupid_exif.h"
 
-
+// class for managing and storing image data
+// for a subset of images in FileBank (only the ones user is gonna view in near future (past))
+// storing original images as well as various resized variants for each of them
+// also storing and managing exif
 
 
 class ImageBuffer {
@@ -26,6 +29,10 @@ class ImageBuffer {
 protected:
 
   class IBData {
+    // for a single input file, store its various resizes,
+    // do the resizes as asked by the user
+    // do all the expensive operation in separate threads (using QFuture)
+    // also store and handle exif data for the single image
   public:
     IBData(const QString & filename);
     ~IBData();
@@ -43,7 +50,7 @@ protected:
 
   protected:
     QFuture<QImage *> originalImage;
-    QExifImageHeader exifData;
+    StupidExif exifData;
     // int rotate; // modulo 4; 0 = keep, 1 = left, 2 = flip, 3 = right; default from exif, changable manually
     QHash<QString, QFuture<QImage *> > rescales; // indexed by ScaleCropRule::toString()
 

@@ -20,6 +20,10 @@
 #include "imagebuffer.h"
 #include "si_globals.h"
 
+// central class:
+// user interface
+// putting together FileBank and ImageBuffer
+
 class SortImg : public QMainWindow {
 Q_OBJECT
 

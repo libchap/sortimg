@@ -9,11 +9,13 @@ using std::min;
 
 const QString FBIterator::null_string = QString();
 const ScaleCropRule FBIterator::null_scr = ScaleCropRule();
+// just constant dummy objects to be returned in case of error as fallback value
 
+// delta between two QMap iteraors
 static int iterator_minus(const _QMQSSCRCI & end, const _QMQSSCRCI & begin) {
   _QMQSSCRCI ix = begin;
   int res = 0;
-  
+
   while (ix != end) {
     ++ix;
     res++;
@@ -36,6 +38,8 @@ FBIterator::FBIterator(_QMQSSCRCI list_begin, _QMQSSCRCI list_end) {
 FBIterator::FBIterator(const FBIterator & fbi) {
   it = fbi.it; before_begin = fbi.before_begin; behind_last = fbi.behind_last;
 }
+
+// is the iterator pointing inside of the map ?
 bool FBIterator::isValid() {
   return ((before_begin <= 0) && (behind_last <= 0));
 }
@@ -56,6 +60,8 @@ bool FBIterator::hasNext(int how_many) {
 bool FBIterator::hasPrev(int how_many){
   return (before_begin <= -how_many);
 }
+
+// jump to next key and return modified iterator
 FBIterator & FBIterator::next_go(int how_many) {
   bool valid_before = isValid();
   before_begin -= how_many;
@@ -69,6 +75,8 @@ FBIterator & FBIterator::next_go(int how_many) {
 FBIterator & FBIterator::prev_go(int how_many) {
   return next_go(-how_many);
 }
+
+// keep the current iterator unchanged, return a new one ponting at the next key
 FBIterator FBIterator::next_get(int how_many) {
   FBIterator creat(*this);
   return creat.next_go(how_many);
@@ -78,6 +86,8 @@ FBIterator FBIterator::prev_get(int how_many) {
   return creat.next_go(-how_many);
 }
 
+// return an iterator for subarray, beginning at the currect iterator position
+// having max_size items (or less, if the current iterator position is near the end)
 FBIterator FBIterator::subiterator_post(int max_size) {
   FBIterator creat(*this);
   creat.before_begin = max(0, before_begin);
@@ -90,5 +100,3 @@ FBIterator FBIterator::subiterator_pre(int max_size) {
   creat.behind_last = max(0, behind_last);
   return creat;
 }
-
-

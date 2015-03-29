@@ -19,6 +19,7 @@ int main(int argc, char ** argv) {
   return app.exec();
 }
 
+// QSize to QString user readable representation
 QString size2string(const QSize & s) {
   if (s.isValid()) {
     QString str;
@@ -26,7 +27,7 @@ QString size2string(const QSize & s) {
   }
   else return "InvalidSize";
 }
-
+// reverse
 bool string2size(const QString & s, QSize * r) {
   if (s == "InvalidSize") {
     *r = QSize();
@@ -188,6 +189,7 @@ void SortImg::resizeEvent(QResizeEvent* event) {
   }
 }
 
+// call on the beginning or when changed to another source directory
 bool SortImg::reInitialize(const QString & path) {
   if (ibuf != NULL) delete ibuf;
   ibuf = new ImageBuffer();
@@ -220,6 +222,7 @@ void SortImg::finalizeResize() {
   fbank->finalizeTmpDir();
 }
 
+// call when moved to another source photo
 void SortImg::viewCurrent() {
   if (ibuf == NULL || fbank == NULL || main_iterator == NULL) {
     pixmapViewer.changePixmap(QPixmap(":/title.jpg"));
@@ -243,6 +246,7 @@ void SortImg::viewCurrent() {
   }
 }
 
+// got o next image and preload
 void SortImg::next() {
   if (fbank == NULL || ibuf == NULL || main_iterator == NULL) return;
 
@@ -349,6 +353,8 @@ void SortImg::markDelete() {
   }
 }
 
+// call when leaving an image (e.g. moving to another one)
+// do the changes done by the user into tmpDir
 void SortImg::targetResize() {
   if (fbank == NULL || ibuf == NULL || main_iterator == NULL) return;
   const ScaleCropRule & targetSCR = main_iterator->getSCR();
@@ -361,12 +367,6 @@ void SortImg::targetResize() {
   }
 }
 
-//void SortImg::msgbox(const QString & msg) {
-//  QMessageBox msgBox;
-//  msgBox.setText(msg);
-//  msgBox.setWindowTitle("SortImg");
-//  msgBox.exec();
-// STUB
 
 QString SortImg::viewDirectoryDialog() {
   QFileDialog *fd = new QFileDialog;
