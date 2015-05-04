@@ -59,6 +59,7 @@ static QImage * loadImageFromJpeg(QString jpegName, int rotate) {
 // grab original (unresized) image data from a QFuture, apply SCR on it (rotate, resize, crop)
 static QImage * scaleCropImage(QFuture<QImage *> & futureOriginal, ScaleCropRule scr, bool fast) {
   QImage * rotated = futureOriginal.result();
+  bool delete_rotated = true;
   qDebug() << "Rotating: " << scr.ini_rot;
   switch (scr.ini_rot) {
     case 1:
@@ -72,6 +73,9 @@ static QImage * scaleCropImage(QFuture<QImage *> & futureOriginal, ScaleCropRule
         rotated = rotate90(rot1);
         delete rot1;
       }
+      break;
+    default:
+      delete_rotated = false;
       break;
   }
   QImage scaled = rotated->scaled(
@@ -88,6 +92,7 @@ static QImage * scaleCropImage(QFuture<QImage *> & futureOriginal, ScaleCropRule
   cr.setHeight(min(basecr.height(), scaleds.height() - cr.y()));
   QImage * cropped = new QImage(scaled.copy(cr));
   // FIXME: copy only the existing subrect, not to fill with black...
+  if (delete_rotated) delete rotated;
   return cropped;
 }
 
