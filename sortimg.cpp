@@ -141,6 +141,9 @@ void SortImg::keyPressEvent(QKeyEvent * event) {
     case Qt::Key_L: // debug
       status(main_iterator->getSCR().toString());
       break;
+    case Qt::Key_M: // debug
+      printAllocs();
+      break;
     case Qt::Key_Delete:
       markDelete();
       break;

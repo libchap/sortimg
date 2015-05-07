@@ -7,6 +7,7 @@ using std::max;
 // counter-clockwise
 static QImage * rotate90(const QImage * src) {
     QImage * dst = new QImage(src->height(), src->width(), src->format());
+    allocated(dst, "rotate90");
     for (int y=0;y<src->height();++y) {
         const uint *srcLine = reinterpret_cast< const uint * >(src->scanLine(y));
         for (int x=0;x<src->width();++x) {
@@ -17,6 +18,7 @@ static QImage * rotate90(const QImage * src) {
 }
 static QImage * rotate270(const QImage * src) {
     QImage * dst = new QImage(src->height(), src->width(), src->format());
+    allocated(dst, "rotate270");
     for (int y=0;y<src->height();++y) {
         const uint *srcLine = reinterpret_cast< const uint * >(src->scanLine(y));
         for (int x=0;x<src->width();++x) {
@@ -40,14 +42,17 @@ static void saveExifModified(const QString & targetJpeg, const StupidExif & exif
 
 static QImage * loadImageFromJpeg(QString jpegName, int rotate) {
   QImage * qi = new QImage(jpegName);
+  allocated(qi, "loadImageFromJpeg");
   QImage * qir;
   switch ((rotate + 4) % 4) {
     case 1:
       qir = rotate90(qi);
+      freed(qi);
       delete qi;
       break;
     case 2:
       qir = rotate270(qi);
+      freed(qi);
       delete qi;
       break;  // FIXME: missing case 3 ?
     default:
@@ -71,6 +76,7 @@ static QImage * scaleCropImage(QFuture<QImage *> & futureOriginal, ScaleCropRule
     case 2: {
         QImage * rot1 = rotate90(rotated);
         rotated = rotate90(rot1);
+	freed(rot1);
         delete rot1;
       }
       break;
@@ -83,7 +89,10 @@ static QImage * scaleCropImage(QFuture<QImage *> & futureOriginal, ScaleCropRule
     Qt::KeepAspectRatio,
     (fast ? Qt::FastTransformation : Qt::SmoothTransformation)
   );
-  if (scr.ini_rot != 0) delete rotated;
+  if (scr.ini_rot != 0) {
+    freed(rotated);
+    delete rotated;
+  }
   QRect basecr = scr.cropRect(), cr;
   QSize scaleds = scaled.size();
   cr.setX(max(basecr.x(), 0));
@@ -91,8 +100,12 @@ static QImage * scaleCropImage(QFuture<QImage *> & futureOriginal, ScaleCropRule
   cr.setWidth(min(basecr.width(), scaleds.width() - cr.x()));
   cr.setHeight(min(basecr.height(), scaleds.height() - cr.y()));
   QImage * cropped = new QImage(scaled.copy(cr));
+  allocated(cropped, "cropped");
   // FIXME: copy only the existing subrect, not to fill with black...
-  if (delete_rotated) delete rotated;
+  if (delete_rotated) {
+    freed(rotated);
+    delete rotated;
+  }
   return cropped;
 }
 
@@ -102,6 +115,7 @@ static bool scaleCropToFile(QFuture<QImage *> & futureOriginal, ScaleCropRule sc
   sced->save(target, 0, si_settings_output_jpeg_quality);
   //QFile::copy(target, target + ".woExif.jpg"); // debug
   saveExifModified(target, exif, sced->size());
+  freed(sced);
   delete sced;
   return true; // just stuff
 }
@@ -121,9 +135,13 @@ ImageBuffer::IBData::IBData(const QString & filename) : exifData(filename) {
 
 
 ImageBuffer::IBData::~IBData() {
+  freed(originalImage.result());
+  delete originalImage.result();
+  
   QHashIterator<QString, QFuture<QImage *> > i(rescales);
   while (i.hasNext()) {
     QString k = i.next().key();
+    freed(rescales[k].result());
     delete rescales[k].result();
   }
   waitForFileRescaling();
@@ -155,6 +173,7 @@ QImage * ImageBuffer::IBData::getSC(ScaleCropRule scr) {
 void ImageBuffer::IBData::unprepareSC(ScaleCropRule scr) {
   QString scrs = scr.toString();
   if (!rescales.contains(scrs)) return;
+  freed(rescales[scrs].result());
   delete rescales[scrs].result();
   rescales.remove(scrs);
 }

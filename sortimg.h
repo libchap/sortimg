@@ -19,6 +19,7 @@
 #include "filebank.h"
 #include "imagebuffer.h"
 #include "si_globals.h"
+#include "memleak.h"
 
 // central class:
 // user interface

@@ -54,12 +54,14 @@ BYTE * read_jpeg_part(QDataStream & from, int * part_type, int * part_length) {
     if (PT != 0xffd8 && PT != 0xffd9 && from.readRawData(temp, 2) == 2) { // has no "else"
       PL = read_endian(temp, 2, EMOTOROLA);
       if (PL > 0 && (result = new BYTE[PL+2]) != NULL) {
+	allocated(result, "JPEG part");
 	if (from.readRawData(result + 4, PL - 2) == PL - 2) {
 	  write_endian(PT, result, 2, EMOTOROLA);
 	  write_endian(PL, result + 2, 2, EMOTOROLA);
 	  // success
 	}
 	else {
+	  freed(result);
 	  delete [] result;
 	  result = NULL;
 	  PT = 0xffff; PL = 0;
@@ -110,6 +112,7 @@ void StupidExif::read_from_jpeg(const QString & jpegName) {
 	if (PL < 16 || read_endian(part + 4, 4, EMOTOROLA) != 0x45786966 ||
 	    read_endian(part + 8, 2, EMOTOROLA) != 0 || read_endian(part + 12, 2, exifEndian) != 0x002a) {
 	  stupidexif_error(9004, read_endian(part + 12, 2, exifEndian));
+	  freed(part);
           delete [] part;
 	}
 	else {
@@ -120,7 +123,10 @@ void StupidExif::read_from_jpeg(const QString & jpegName) {
 	}
 	return; // instead of break; we don't wanna have multiple exif parts
       default:
-	if (part != NULL) delete [] part;
+	if (part != NULL) {
+	  freed(part);
+	  delete [] part;
+	}
     }
   }
 }
@@ -262,6 +268,7 @@ StupidExif & StupidExif::se_copy_from(const StupidExif & se) {
   if (se.exifData != NULL) {
     int edlen = se.getExifDataLen() + 2;
     exifData = new BYTE[edlen];
+    allocated(exifData, "stupidexif copy constructor");
     if (exifData != NULL) {
       memcpy(exifData, se.exifData, edlen);
       if (se.tagOrientation != NULL) tagOrientation = exifData + (se.tagOrientation - se.exifData);

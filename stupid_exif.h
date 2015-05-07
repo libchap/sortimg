@@ -7,6 +7,8 @@
 #include <QVector>
 #include <QDebug>
 
+#include "memleak.h"
+
 
 
 // this is something like a library
@@ -31,9 +33,9 @@ class StupidExif {
 
 public:
   StupidExif(const QString & jpg) { read_from_jpeg(jpg); }
-  virtual ~StupidExif() { if (exifData) delete [] exifData; }
+  virtual ~StupidExif() { if (exifData) { freed(exifData); delete [] exifData; } }
   StupidExif(const StupidExif & se) { se_copy_from(se); }
-  StupidExif & operator=(const StupidExif & se) { if (exifData) delete [] exifData; return se_copy_from(se); }
+  StupidExif & operator=(const StupidExif & se) { if (exifData) { freed(exifData); delete [] exifData; } return se_copy_from(se); }
 
   void insert_into_jpeg(const QString & jpegName) const;
 
