@@ -64,7 +64,7 @@ static QImage * loadImageFromJpeg(QString jpegName, int rotate) {
 // grab original (unresized) image data from a QFuture, apply SCR on it (rotate, resize, crop)
 static QImage * scaleCropImage(QFuture<QImage *> & futureOriginal, ScaleCropRule scr, bool fast) {
   QImage * rotated = futureOriginal.result();
-  bool delete_rotated = true;
+
   qDebug() << "Rotating: " << scr.ini_rot;
   switch (scr.ini_rot) {
     case 1:
@@ -80,9 +80,7 @@ static QImage * scaleCropImage(QFuture<QImage *> & futureOriginal, ScaleCropRule
         delete rot1;
       }
       break;
-    default:
-      delete_rotated = false;
-      break;
+
   }
   QImage scaled = rotated->scaled(
     scr.scaleSize(),
@@ -99,13 +97,13 @@ static QImage * scaleCropImage(QFuture<QImage *> & futureOriginal, ScaleCropRule
   cr.setY(max(basecr.y(), 0));
   cr.setWidth(min(basecr.width(), scaleds.width() - cr.x()));
   cr.setHeight(min(basecr.height(), scaleds.height() - cr.y()));
-  QImage * cropped = new QImage(scaled.copy(cr));
+  QImage cropped1 = scaled.copy(cr);
+  QImage * cropped = new QImage(cropped1);
   allocated(cropped, "cropped");
+  //qDebug()<<"scaled: "<<size2string(scaled.size())<<" ; rect: "<<cr.x()<<":"<<cr.y()<<"/"<<size2string(cr.size())<<" ; cropped1: "<<size2string(cropped1.size());
+  //qDebug()<<"cropped: "<<size2string(cropped->size());
   // FIXME: copy only the existing subrect, not to fill with black...
-  if (delete_rotated) {
-    freed(rotated);
-    delete rotated;
-  }
+
   return cropped;
 }
 
@@ -137,7 +135,7 @@ ImageBuffer::IBData::IBData(const QString & filename) : exifData(filename) {
 ImageBuffer::IBData::~IBData() {
   freed(originalImage.result());
   delete originalImage.result();
-  
+
   QHashIterator<QString, QFuture<QImage *> > i(rescales);
   while (i.hasNext()) {
     QString k = i.next().key();
