@@ -22,15 +22,15 @@ public:
   FBIterator(const FBIterator & fbi);
 
   const QString & operator*();
-  const ScaleCropRule & getSCR();
+  const ScaleCropRule & getSCR() const;
   void setSCR(const ScaleCropRule & newscr);
-  bool hasNext(int how_many = 1);
-  bool hasPrev(int how_many = 1);
+  bool hasNext(int how_many = 1) const;
+  bool hasPrev(int how_many = 1) const;
   FBIterator & next_go(int how_many = 1);
   FBIterator & prev_go(int how_many = 1);
   FBIterator next_get(int how_many = 1);
   FBIterator prev_get(int how_many = 1);
-  bool isValid();
+  bool isValid() const;
   //bool isPointing() { return valid && (qslcurr != qslend); }
 
   FBIterator subiterator_post(int max_size);

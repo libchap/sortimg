@@ -225,6 +225,13 @@ void SortImg::finalizeResize() {
   fbank->finalizeTmpDir();
 }
 
+// changes ibuf's default SCR according to what shall be prepared
+void SortImg::disputeDefaultSCR(const FBIterator & accordingTo) {
+  ScaleCropRule atscr = accordingTo.getSCR();
+  if (!atscr.isNull()) ibuf->default_scr = atscr.retarget(ScaleCropRule(pixmapViewer.size()));
+  else ibuf->default_scr = ScaleCropRule(pixmapViewer.size());
+}
+
 // call when moved to another source photo
 void SortImg::viewCurrent() {
   if (ibuf == NULL || fbank == NULL || main_iterator == NULL) {
@@ -234,6 +241,7 @@ void SortImg::viewCurrent() {
     return;
   }
 
+  disputeDefaultSCR(*main_iterator);
   scr = ibuf->default_scr;
 
   QString cn = **main_iterator;
@@ -260,7 +268,9 @@ void SortImg::next() {
   ibuf->removeImage(*main_iterator->prev_get(si_settings_preload_images));
   main_iterator->next_go();
   //ibuf->addRange(main_iterator->subiterator_post(si_settings_preload_images));
-  ibuf->addImage(*main_iterator->next_get(si_settings_preload_images));
+  FBIterator toAdd = main_iterator->next_get(si_settings_preload_images);
+  disputeDefaultSCR(toAdd);
+  ibuf->addImage(*toAdd);
 
   viewCurrent();
 }
@@ -275,7 +285,9 @@ void SortImg::prev() {
   ibuf->removeImage(*main_iterator->next_get(si_settings_preload_images));
   main_iterator->prev_go();
   //ibuf->addRange(main_iterator->subiterator_post(si_settings_preload_images));
-  ibuf->addImage(*main_iterator->prev_get(si_settings_preload_images));
+  FBIterator toAdd = main_iterator->prev_get(si_settings_preload_images);
+  disputeDefaultSCR(toAdd);
+  ibuf->addImage(*toAdd);
 
   viewCurrent();
 }
@@ -299,7 +311,7 @@ void SortImg::markCrop() {
   if (main_iterator == NULL || ibuf == NULL) return;
 
   ScaleCropRule old_scr = main_iterator->getSCR();
-  if (old_scr.crop_w == 0) {
+  if (old_scr.isNull()) {
     old_scr = ScaleCropRule(ibuf->getOriginalSize(**main_iterator));
   }
 
@@ -318,7 +330,7 @@ void SortImg::rotateLeft() {
   if (main_iterator == NULL || ibuf == NULL) return;
 
   ScaleCropRule miscr = main_iterator->getSCR();
-  if (miscr.crop_w <= 0) miscr = ScaleCropRule(ibuf->getOriginalSize(**main_iterator));
+  if (miscr.isNull()) miscr = ScaleCropRule(ibuf->getOriginalSize(**main_iterator));
   miscr.rotate_left();
   qDebug()<<"Rotleft "<<miscr.toString();
   main_iterator->setSCR(miscr);
@@ -335,7 +347,7 @@ void SortImg::rotateRight() {
   if (main_iterator == NULL || ibuf == NULL) return;
 
   ScaleCropRule miscr = main_iterator->getSCR();
-  if (miscr.crop_w <= 0) miscr = ScaleCropRule(ibuf->getOriginalSize(**main_iterator));
+  if (miscr.isNull()) miscr = ScaleCropRule(ibuf->getOriginalSize(**main_iterator));
   miscr.rotate_right();
   qDebug()<<"Rotright "<<miscr.toString();
   main_iterator->setSCR(miscr);
@@ -367,7 +379,7 @@ void SortImg::markDelete() {
 void SortImg::targetResize() {
   if (fbank == NULL || ibuf == NULL || main_iterator == NULL) return;
   const ScaleCropRule & targetSCR = main_iterator->getSCR();
-  if (targetSCR.crop_w > 0) {
+  if (!targetSCR.isNull()) {
     QString cn = **main_iterator;
     //ScaleCropRule sc(targetSize, targetSize, 0, 0, targetSize, targetSize);
     ibuf->rescaleToFile(cn, targetSCR, fbank->getTmpNameFor(cn));

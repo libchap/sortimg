@@ -15,7 +15,7 @@ void ImageBuffer::addImage(const QString & fileName) {
   if (!fileName.isEmpty() && !images.contains(fileName)) {
     images.insert(fileName, new IBData(fileName));
   }
-  if (default_scr.scale_w != 0) {
+  if (!default_scr.isNull()) {
     prepareRescale(fileName);
   }
 }

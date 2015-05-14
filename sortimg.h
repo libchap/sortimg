@@ -44,6 +44,8 @@ protected:
 
   bool reInitialize(const QString & path);
 
+  void disputeDefaultSCR(const FBIterator & accordingTo);
+  
   void viewCurrent();
   void next();
   void prev();

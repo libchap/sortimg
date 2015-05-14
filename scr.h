@@ -39,10 +39,11 @@ struct ScaleCropRule {
 
   QString toString() const;
   QString toShortString() const;
-  QSize scaleSize() { return QSize(scale_w, scale_h); }
+  QSize scaleSize() const { return QSize(scale_w, scale_h); }
   QRect cropRect();
 
-  bool isJustResize() { return (scale_w == crop_w && scale_h == crop_h && crop_x == 0 && crop_y == 0); }
+  bool isJustResize() const { return (scale_w == crop_w && scale_h == crop_h && crop_x == 0 && crop_y == 0 && ini_rot == 0); }
+  bool isNull() const { return ((scale_w == 0 || scale_h == 0 || crop_w == 0 || crop_h == 0) && ini_rot == 0); }
 
   ScaleCropRule retarget(const ScaleCropRule & targetSize);
 

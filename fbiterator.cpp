@@ -40,24 +40,24 @@ FBIterator::FBIterator(const FBIterator & fbi) {
 }
 
 // is the iterator pointing inside of the map ?
-bool FBIterator::isValid() {
+bool FBIterator::isValid() const {
   return ((before_begin <= 0) && (behind_last <= 0));
 }
 const QString & FBIterator::operator*() {
   if (isValid()) return it.key();
   else return null_string;
 }
-const ScaleCropRule & FBIterator::getSCR() {
+const ScaleCropRule & FBIterator::getSCR() const {
   if (isValid()) return it.value();
   else return null_scr;
 }
 void FBIterator::setSCR(const ScaleCropRule & newscr) {
   if (isValid()) it.value() = newscr;
 }
-bool FBIterator::hasNext(int how_many) {
+bool FBIterator::hasNext(int how_many) const {
   return (behind_last <= -how_many);
 }
-bool FBIterator::hasPrev(int how_many){
+bool FBIterator::hasPrev(int how_many) const {
   return (before_begin <= -how_many);
 }
 
