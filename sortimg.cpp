@@ -318,7 +318,9 @@ void SortImg::rotateLeft() {
   if (main_iterator == NULL || ibuf == NULL) return;
 
   ScaleCropRule miscr = main_iterator->getSCR();
+  if (miscr.crop_w <= 0) miscr = ScaleCropRule(ibuf->getOriginalSize(**main_iterator));
   miscr.rotate_left();
+  qDebug()<<"Rotleft "<<miscr.toString();
   main_iterator->setSCR(miscr);
 
   QString cn = **main_iterator;
@@ -326,13 +328,16 @@ void SortImg::rotateLeft() {
   //qDebug() << "Post-rezoom: " << scr.toString();
   QImage * rqi = ibuf->getRescaled(cn, scr);
   pixmapViewer.changePixmap(QPixmap::fromImage(*rqi));
+  // FIXME : delete rqi ??
 }
 
 void SortImg::rotateRight() {
   if (main_iterator == NULL || ibuf == NULL) return;
 
   ScaleCropRule miscr = main_iterator->getSCR();
+  if (miscr.crop_w <= 0) miscr = ScaleCropRule(ibuf->getOriginalSize(**main_iterator));
   miscr.rotate_right();
+  qDebug()<<"Rotright "<<miscr.toString();
   main_iterator->setSCR(miscr);
 
   QString cn = **main_iterator;
@@ -340,6 +345,7 @@ void SortImg::rotateRight() {
   //qDebug() << "Post-rezoom: " << scr.toString();
   QImage * rqi = ibuf->getRescaled(cn, scr);
   pixmapViewer.changePixmap(QPixmap::fromImage(*rqi));
+  // FIXME : delete rqi ??
 }
 
 void SortImg::markDelete() {
