@@ -9,7 +9,7 @@ using std::max;
 QString ScaleCropRule::toString() const {
   QString res;
   res.sprintf("ScaleCropRule Scale: %dx%d, Crop:%dx%d at %d:%d; rotate=%d", scale_w, scale_h, crop_w, crop_h, crop_x, crop_y, ini_rot);
-  return res;
+  return res + co.toString();
 }
 
 // short vague user readable description, not unique
@@ -24,7 +24,7 @@ QString ScaleCropRule::toShortString() const {
   }
   QString res;
   res.sprintf("Rescale to %dpx", max(crop_w, crop_h));
-  return rot + crop + res;
+  return rot + crop + res + co.toString();
 }
 
 // supply rotate left for the resize and crop information, if rotating left the image
@@ -62,7 +62,7 @@ ScaleCropRule ScaleCropRule::rezoom(double scale_zoom, int keepx, int keepy) {
   double new_cx = double(crop_x + keepx) * scale_zoom;
   double new_cy = double(crop_y + keepy) * scale_zoom;
   //qDebug() << "Rezoom " << scale_zoom << " : " << double(scale_w) << "x" << double(scale_h) << " => " << new_sw << "x" << new_sh;
-  return ScaleCropRule(int(new_sw), int(new_sh), int(new_cx) - keepx, int(new_cy) - keepy, crop_w, crop_h, ini_rot);
+  return ScaleCropRule(int(new_sw), int(new_sh), int(new_cx) - keepx, int(new_cy) - keepy, crop_w, crop_h, ini_rot, co);
 }
 
 // return the crop information as QRect
@@ -80,5 +80,5 @@ ScaleCropRule ScaleCropRule::retarget(const ScaleCropRule & targetSize) {
   return ScaleCropRule(int(coef * double(scale_w)), int(coef * double(scale_h)),
 		       int(coef * double(crop_x)), int(coef * double(crop_y)),
 		       int(coef * double(crop_w)), int(coef * double(crop_h)),
-		       ini_rot);
+		       ini_rot, co);
 }

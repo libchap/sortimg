@@ -20,6 +20,7 @@
 #include "imagebuffer.h"
 #include "si_globals.h"
 #include "memleak.h"
+#include "colorop.h"
 
 // central class:
 // user interface
@@ -58,6 +59,8 @@ protected:
 
   void rotateLeft();
   void rotateRight();
+  void increaseBrightness();
+  void decreaseBrightness();
 
   void finalizeResize();
 

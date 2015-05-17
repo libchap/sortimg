@@ -98,13 +98,14 @@ static QImage * scaleCropImage(QFuture<QImage *> & futureOriginal, ScaleCropRule
   cr.setWidth(min(basecr.width(), scaleds.width() - cr.x()));
   cr.setHeight(min(basecr.height(), scaleds.height() - cr.y()));
   QImage cropped1 = scaled.copy(cr);
-  QImage * cropped = new QImage(cropped1);
-  allocated(cropped, "cropped");
+  QImage colored = scr.co.applyOn(cropped1);
+  QImage * the_result = new QImage(colored);
+  allocated(the_result, "cropped");
   //qDebug()<<"scaled: "<<size2string(scaled.size())<<" ; rect: "<<cr.x()<<":"<<cr.y()<<"/"<<size2string(cr.size())<<" ; cropped1: "<<size2string(cropped1.size());
   //qDebug()<<"cropped: "<<size2string(cropped->size());
   // FIXME: copy only the existing subrect, not to fill with black...
 
-  return cropped;
+  return the_result;
 }
 
 // the same as before but save the result into file (together with provided exif)

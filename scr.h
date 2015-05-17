@@ -6,6 +6,8 @@
 #include <QString>
 #include <QRect>
 
+#include "colorop.h"
+
 // the information struct
 // keeping instructions how the image shall be (in this order):
 // 1) rotated
@@ -24,6 +26,8 @@ struct ScaleCropRule {
   int crop_h;
 
   int ini_rot;
+  
+  ColorOperation co;
 
   ScaleCropRule()
       : scale_w(0), scale_h(0), crop_x(0), crop_y(0), crop_w(0), crop_h(0), ini_rot(0)
@@ -33,6 +37,9 @@ struct ScaleCropRule {
       {  }
   ScaleCropRule(const QSize & qs, int ir = 0)
       : scale_w(qs.width()), scale_h(qs.height()), crop_x(0), crop_y(0), crop_w(qs.width()), crop_h(qs.height()), ini_rot(ir)
+      {  }
+  ScaleCropRule(int sw, int sh, int cx, int cy, int cw, int ch, int ir, ColorOperation coop)
+      : scale_w(sw), scale_h(sh), crop_x(cx), crop_y(cy), crop_w(cw), crop_h(ch), ini_rot(ir), co(coop)
       {  }
 
   ScaleCropRule rezoom(double scale_zoom, int keepx, int keepy);

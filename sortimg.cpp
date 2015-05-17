@@ -144,6 +144,12 @@ void SortImg::keyPressEvent(QKeyEvent * event) {
     case Qt::Key_M: // debug
       printAllocs();
       break;
+    case Qt::Key_Comma:
+      increaseBrightness();
+      break;
+    case Qt::Key_Period:
+      decreaseBrightness();
+      break;
     case Qt::Key_Delete:
       markDelete();
       break;
@@ -358,6 +364,26 @@ void SortImg::rotateRight() {
   QImage * rqi = ibuf->getRescaled(cn, scr);
   pixmapViewer.changePixmap(QPixmap::fromImage(*rqi));
   // FIXME : delete rqi ??
+}
+
+void SortImg::increaseBrightness() {
+  if (main_iterator == NULL || ibuf == NULL) return;
+
+  ScaleCropRule miscr = main_iterator->getSCR();
+  miscr.co.increaseBrightness();
+  main_iterator->setSCR(miscr);
+  
+  viewCurrent(); // FIXME ! add pre-computing further rebrightnesses
+}
+
+void SortImg::decreaseBrightness() {
+  if (main_iterator == NULL || ibuf == NULL) return;
+
+  ScaleCropRule miscr = main_iterator->getSCR();
+  miscr.co.decreaseBrightness();
+  main_iterator->setSCR(miscr);
+  
+  viewCurrent(); // FIXME ! add pre-computing further rebrightnesses
 }
 
 void SortImg::markDelete() {

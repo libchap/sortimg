@@ -21,12 +21,18 @@
 #define si_settings_size_E 1800
 #define si_settings_size_F 1900
 
-// initial ccords of the program window
+// initial coords of the program window
 #define si_settings_initial_width 1024
 #define si_settings_initial_height 768
 #define si_settings_initial_x 100
 #define si_settings_initial_y 100
 
+// quantity parameters for color changes
+#define si_settings_brightness_step 4
+
+
+#include <QString>
+#include <QSize>
 
 // some generally usable functions
 extern QString size2string(const QSize & s);
