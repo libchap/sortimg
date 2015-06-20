@@ -6,8 +6,10 @@
 
 // how many images preload when walking through the source directory
 #define si_settings_preload_images 3
-// how many rescales pre-do when zoming with mouse wheel
+// how many rescales pre-do when zooming with mouse wheel
 #define si_settings_preload_zooms 3
+// how many rescales pre-do when in/decreasing brightness
+#define si_settings_preload_brightness 3
 
 // quantity parameters of the effect of mouse wheel zooming
 #define si_settings_mousewheel_zoom_base 1.02

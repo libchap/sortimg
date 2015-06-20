@@ -370,20 +370,44 @@ void SortImg::increaseBrightness() {
   if (main_iterator == NULL || ibuf == NULL) return;
 
   ScaleCropRule miscr = main_iterator->getSCR();
+  if (miscr.isNull()) miscr = ScaleCropRule(ibuf->getOriginalSize(**main_iterator));
   miscr.co.increaseBrightness();
   main_iterator->setSCR(miscr);
-  
-  viewCurrent(); // FIXME ! add pre-computing further rebrightnesses
+
+  QString cn = **main_iterator;
+
+  qDebug() << "Post-brightness: " << miscr.toString();
+
+  QImage * rqi = ibuf->getRescaled(cn, miscr);
+  pixmapViewer.changePixmap(QPixmap::fromImage(*rqi));
+
+
+  for (int i = 1; i <= si_settings_preload_brightness; i++) {
+    miscr.co.increaseBrightness();
+    ibuf->prepareRescale(cn, miscr);
+  }
 }
 
 void SortImg::decreaseBrightness() {
   if (main_iterator == NULL || ibuf == NULL) return;
 
   ScaleCropRule miscr = main_iterator->getSCR();
+  if (miscr.isNull()) miscr = ScaleCropRule(ibuf->getOriginalSize(**main_iterator));
   miscr.co.decreaseBrightness();
   main_iterator->setSCR(miscr);
-  
-  viewCurrent(); // FIXME ! add pre-computing further rebrightnesses
+
+  QString cn = **main_iterator;
+
+  qDebug() << "Post-brightness: " << miscr.toString();
+
+  QImage * rqi = ibuf->getRescaled(cn, miscr);
+  pixmapViewer.changePixmap(QPixmap::fromImage(*rqi));
+
+
+  for (int i = 1; i <= si_settings_preload_brightness; i++) {
+    miscr.co.decreaseBrightness();
+    ibuf->prepareRescale(cn, miscr);
+  }
 }
 
 void SortImg::markDelete() {
