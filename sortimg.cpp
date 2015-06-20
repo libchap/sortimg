@@ -241,9 +241,9 @@ void SortImg::viewCurrent() {
 
   view_fname = **main_iterator;
   view_origsize = ibuf->getOriginalSize(view_fname);
-  view_trash_zoom = 1;
   view_scr = (main_iterator)->getSCR();
-  
+  view_trash_zoom = view_scr.isJustResize();
+
   if (!view_scr.hasTarget()) view_scr.retarget(view_origsize);
 
   if (refreshCurrent()) {
