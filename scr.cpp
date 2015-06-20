@@ -1,84 +1,91 @@
 #include "scr.h"
 
-#include <algorithm> // max, min
+#include <algorithm> // max, min, swap
 using std::min;
 using std::max;
+using std::swap;
 
 // return string representation
 // both user readable and unique for each SCR (usable as a map key)
 QString ScaleCropRule::toString() const {
   QString res;
-  res.sprintf("ScaleCropRule Scale: %dx%d, Crop:%dx%d at %d:%d; rotate=%d", scale_w, scale_h, crop_w, crop_h, crop_x, crop_y, ini_rot);
-  return res + co.toString();
+  if (hasTarget()) res.sprintf("ScaleCropRule Rotate=%d; Scale: %dx%d, Crop %dx%d at %d:%d; Brightness=%+d%%",
+                               rotate, int (target_w * resize_w), int(target_h * resize_h), target_w, target_h,
+                               int(target_w * crop_x), int(target_h * crop_y), brightness);
+  else res.sprintf("ScaleCropRule just Rotate=%d; Brightness=%+d", rotate, brightness);
+  return res;
+}
+
+bool ScaleCropRule::operator==(const ScaleCropRule & s) const {
+  return (resize_w == s.resize_w && resize_h == s.resize_w && crop_x == s.crop_x &&
+          crop_y == s.crop_y && target_w == s.target_w && target_h == s.target_h &&
+          rotate == s.rotate && brightness == s.brightness);
 }
 
 // short vague user readable description, not unique
 QString ScaleCropRule::toShortString() const {
-  QString crop;
-  if (crop_w > 0 && (scale_w != crop_w || scale_h != crop_h)) {
-    crop = "Crop and ";
-  }
-  QString rot;
-  if (ini_rot != 0) {
-    rot = "Rotate, ";
-  }
   QString res;
-  res.sprintf("Rescale to %dpx", max(crop_w, crop_h));
-  return rot + crop + res + co.toString();
+  if (rotate != 0) res += "Rotate, ";
+  if (hasTarget()) {
+    res += "Scale ";
+    if (!isJustResize()) res += "and Crop ";
+  }
+  if (brightness != 0) res += "and Color correction";
+  return res;
 }
 
 // supply rotate left for the resize and crop information, if rotating left the image
 // must keep the resulting size as well as the visible set of pixels after the crop
 void ScaleCropRule::rotate_left() {
-  int temp;
+  rotate = (rotate + 5) % 4;
 
-  temp = scale_w; scale_w = scale_h; scale_h = temp;
-  temp = crop_w; crop_w = crop_h; crop_h = temp;
-  temp = crop_y;
-  crop_y = scale_h - crop_h - crop_x;
-  crop_x = temp;
-
-  ini_rot = (ini_rot + 5) % 4;
+  swap(target_w, target_h);
+  swap(resize_w, resize_h);
+  swap(crop_x, crop_y);
+  crop_y = resize_h - 1.0 - crop_y;
 }
+
+
 void ScaleCropRule::rotate_right() {
-  int temp;
+  rotate = (rotate + 3) % 4;
 
-  temp = scale_w; scale_w = scale_h; scale_h = temp;
-  temp = crop_w; crop_w = crop_h; crop_h = temp;
-  temp = crop_x;
-  crop_x = scale_w - crop_w - crop_y;
-  crop_y = temp;
-
-  ini_rot = (ini_rot + 3) % 4;
+  swap(target_w, target_h);
+  swap(resize_w, resize_h);
+  swap(crop_x, crop_y);
+  crop_x = resize_w - 1.0 - crop_x;
 }
 
 
 // zoom the resize information by the factor scale_zoom,
 // move the crop part (keeping crop size) so that the keepx:keepy cropped-part coords
 // keep pointing at the same point in the original image
-ScaleCropRule ScaleCropRule::rezoom(double scale_zoom, int keepx, int keepy) {
-  double new_sw = double(scale_w) * scale_zoom;
-  double new_sh = double(scale_h) * scale_zoom;
-  double new_cx = double(crop_x + keepx) * scale_zoom;
-  double new_cy = double(crop_y + keepy) * scale_zoom;
-  //qDebug() << "Rezoom " << scale_zoom << " : " << double(scale_w) << "x" << double(scale_h) << " => " << new_sw << "x" << new_sh;
-  return ScaleCropRule(int(new_sw), int(new_sh), int(new_cx) - keepx, int(new_cy) - keepy, crop_w, crop_h, ini_rot, co);
+void ScaleCropRule::rezoom(double scale_zoom, double keepx, double keepy) {
+  resize_w *= scale_zoom;
+  resize_h *= scale_zoom;
+  crop_x = (crop_x + keepx) * scale_zoom - keepx;
+  crop_y = (crop_y + keepy) * scale_zoom - keepy;
 }
 
 // return the crop information as QRect
-QRect ScaleCropRule::cropRect() {
-  return QRect(crop_x, crop_y, min(scale_w - crop_x, crop_w), min(scale_h - crop_y, crop_h));
+QRect ScaleCropRule::cropRect() const {
+  return QRect(max(crop_x * target_w, 0.0), max(crop_y * target_w, 0.0), target_w * min(resize_w - crop_x, 1.0), target_h * min(resize_h - crop_y, 1.0));
 
 }
 
-// change both resize and crop information so that the resulting size of the image will be targetSize
-ScaleCropRule ScaleCropRule::retarget(const ScaleCropRule & targetSize) {
-  double coef1 = double(targetSize.crop_w) / double(crop_w);
-  double coef2 = double(targetSize.crop_h) / double(crop_h);
-  double coef = min(coef1, coef2);
+void ScaleCropRule::retarget(const QSize & targetSize) {
+  target_w = targetSize.width();
+  target_h = targetSize.height();
+}
 
-  return ScaleCropRule(int(coef * double(scale_w)), int(coef * double(scale_h)),
-		       int(coef * double(crop_x)), int(coef * double(crop_y)),
-		       int(coef * double(crop_w)), int(coef * double(crop_h)),
-		       ini_rot, co);
+void ScaleCropRule::retarget_to_bound(QSize bound) {
+  if (!hasTarget()) return;
+  double aspect = target_w / (double) target_h;
+  double bound_aspect = bound.width() / (double) bound.height();
+  if (aspect > bound_aspect) bound.setHeight(bound.width() / aspect);
+  else bound.setWidth(bound.height() * aspect);
+  retarget(bound);
+}
+
+void ScaleCropRule::retarget(int targetPx) {
+  retarget_to_bound(QSize(targetPx, targetPx));
 }

@@ -1,8 +1,8 @@
 #include "imagebuffer.h"
 
-#include <algorithm> // max, min
-using std::min;
-using std::max;
+// #include <algorithm> // max, min
+// using std::min;
+// using std::max;
 
 // counter-clockwise
 static QImage * rotate90(const QImage * src) {
@@ -65,8 +65,8 @@ static QImage * loadImageFromJpeg(QString jpegName, int rotate) {
 static QImage * scaleCropImage(QFuture<QImage *> & futureOriginal, ScaleCropRule scr, bool fast) {
   QImage * rotated = futureOriginal.result();
 
-  qDebug() << "Rotating: " << scr.ini_rot;
-  switch (scr.ini_rot) {
+  qDebug() << "Rotating: " << scr.rotate;
+  switch (scr.rotate) {
     case 1:
       rotated = rotate270(rotated);
       break;
@@ -87,22 +87,16 @@ static QImage * scaleCropImage(QFuture<QImage *> & futureOriginal, ScaleCropRule
     Qt::KeepAspectRatio,
     (fast ? Qt::FastTransformation : Qt::SmoothTransformation)
   );
-  if (scr.ini_rot != 0) {
+  if (scr.rotate != 0) {
     freed(rotated);
     delete rotated;
   }
-  QRect basecr = scr.cropRect(), cr;
-  QSize scaleds = scaled.size();
-  cr.setX(max(basecr.x(), 0));
-  cr.setY(max(basecr.y(), 0));
-  cr.setWidth(min(basecr.width(), scaleds.width() - cr.x()));
-  cr.setHeight(min(basecr.height(), scaleds.height() - cr.y()));
-  QImage cropped1 = scaled.copy(cr);
-  QImage colored = scr.co.applyOn(cropped1);
-  qDebug()<<"Brightness: "<<scr.co.getBrightness();
+  QRect basecr = scr.cropRect();
+  QImage cropped1 = scaled.copy(basecr);
+  QImage colored = changeBrightness(cropped1, scr.brightness);
   QImage * the_result = new QImage(colored);
   allocated(the_result, "cropped");
-  //qDebug()<<"scaled: "<<size2string(scaled.size())<<" ; rect: "<<cr.x()<<":"<<cr.y()<<"/"<<size2string(cr.size())<<" ; cropped1: "<<size2string(cropped1.size());
+  qDebug()<<"scaled: "<<size2string(scaled.size())<<" ; rect: "<<basecr.x()<<":"<<basecr.y()<<"/"<<size2string(basecr.size())<<" ; cropped1: "<<size2string(cropped1.size());
   //qDebug()<<"cropped: "<<size2string(cropped->size());
   // FIXME: copy only the existing subrect, not to fill with black...
 

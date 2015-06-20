@@ -46,8 +46,9 @@ protected:
   bool reInitialize(const QString & path);
 
   void disputeDefaultSCR(const FBIterator & accordingTo);
-  
+
   void viewCurrent();
+  bool refreshCurrent();
   void next();
   void prev();
 
@@ -59,8 +60,7 @@ protected:
 
   void rotateLeft();
   void rotateRight();
-  void increaseBrightness();
-  void decreaseBrightness();
+  void adjustBrightness(int sgn = +1);
 
   void finalizeResize();
 
@@ -73,7 +73,11 @@ protected:
   FBIterator * main_iterator = NULL;
   ImageBuffer * ibuf = NULL;
 
-  ScaleCropRule scr; // this is the currently viewed scr
+  ScaleCropRule view_scr;
+  QString view_fname;
+  QSize view_origsize;
+  bool view_trash_zoom;
+
 
 private:
 

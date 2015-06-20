@@ -17,6 +17,8 @@ class ImageBuffer;
 #include "stupid_exif.h"
 #include "memleak.h"
 
+#include "colorop.h"
+
 // class for managing and storing image data
 // for a subset of images in FileBank (only the ones user is gonna view in near future (past))
 // storing original images as well as various resized variants for each of them
