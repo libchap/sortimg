@@ -11,6 +11,7 @@
 #include <QResizeEvent>
 #include <QMessageBox>
 #include <QFileDialog>
+#include <QTreeView>
 
 //#include "global.h"
 #include "pixmapviewer.h"

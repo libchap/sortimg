@@ -7,6 +7,7 @@
 #include <QHash>
 #include <QFuture>
 #include <QImage>
+#include <QtConcurrent>
 
 class ImageBuffer;
 

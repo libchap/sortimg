@@ -6,6 +6,8 @@ CONFIG += c++11
 QMAKE_CXXFLAGS += -std=c++11
 #LIBS += -lexif -lm 
 CONFIG += debug
+QT += widgets
+QT += concurrent
 
 # Input
 HEADERS += sortimg.h pixmapviewer.h stupid_exif.h memleak.h colorop.h 
