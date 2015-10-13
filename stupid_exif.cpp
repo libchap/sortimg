@@ -54,7 +54,7 @@ BYTE * read_jpeg_part(QDataStream & from, int * part_type, int * part_length) {
     if (PT != 0xffd8 && PT != 0xffd9 && from.readRawData(temp, 2) == 2) { // has no "else"
       PL = read_endian(temp, 2, EMOTOROLA);
       if (PL > 0 && (result = new BYTE[PL+2]) != NULL) {
-	allocated(result, "JPEG part");
+	allocated(result, PL+2, QString("JPEG part 0x")+QString::number(PT, 16)+QString::number(PL, 16));
 	if (from.readRawData(result + 4, PL - 2) == PL - 2) {
 	  write_endian(PT, result, 2, EMOTOROLA);
 	  write_endian(PL, result + 2, 2, EMOTOROLA);
@@ -254,7 +254,7 @@ void StupidExif::setTagYResolution(int x) {
 
 
 int StupidExif::getExifDataLen() const {
-  return (exifData == NULL ? 0 : read_endian(exifData + 2, 2, exifEndian));
+  return (exifData == NULL ? 0 : read_endian(exifData + 2, 2, EMOTOROLA));
 }
 
 // helper function for copy constructor and assignment operators
@@ -265,12 +265,15 @@ StupidExif & StupidExif::se_copy_from(const StupidExif & se) {
   tagOrientation = NULL;
   tagXResolution = NULL;
   tagYResolution = NULL;
+  //int i;
   if (se.exifData != NULL) {
     int edlen = se.getExifDataLen() + 2;
+    qDebug() << "se_copy_from: edlen=" << edlen << " from " << (void *) se.exifData << " beginning with " << (* (void **) se.exifData) << "\n";
     exifData = new BYTE[edlen];
-    allocated(exifData, "stupidexif copy constructor");
+    allocated(exifData, edlen, "stupidexif copy constructor");
     if (exifData != NULL) {
       memcpy(exifData, se.exifData, edlen);
+      //for (i = 0; i < edlen; i++) exifData[i] = se.exifData[i];
       if (se.tagOrientation != NULL) tagOrientation = exifData + (se.tagOrientation - se.exifData);
       if (se.tagXResolution != NULL) tagXResolution = exifData + (se.tagXResolution - se.exifData);
       if (se.tagYResolution != NULL) tagYResolution = exifData + (se.tagYResolution - se.exifData);

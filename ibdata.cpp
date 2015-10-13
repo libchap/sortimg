@@ -7,7 +7,7 @@ using std::max;
 // counter-clockwise
 static QImage * rotate90(const QImage * src) {
     QImage * dst = new QImage(src->height(), src->width(), src->format());
-    allocated(dst, "rotate90");
+    allocated(dst, sizeof(QImage), "rotate90");
     for (int y=0;y<src->height();++y) {
         const uint *srcLine = reinterpret_cast< const uint * >(src->scanLine(y));
         for (int x=0;x<src->width();++x) {
@@ -18,7 +18,7 @@ static QImage * rotate90(const QImage * src) {
 }
 static QImage * rotate270(const QImage * src) {
     QImage * dst = new QImage(src->height(), src->width(), src->format());
-    allocated(dst, "rotate270");
+    allocated(dst, sizeof(QImage), "rotate270");
     for (int y=0;y<src->height();++y) {
         const uint *srcLine = reinterpret_cast< const uint * >(src->scanLine(y));
         for (int x=0;x<src->width();++x) {
@@ -42,7 +42,7 @@ static void saveExifModified(const QString & targetJpeg, const StupidExif & exif
 
 static QImage * loadImageFromJpeg(QString jpegName, int rotate) {
   QImage * qi = new QImage(jpegName);
-  allocated(qi, "loadImageFromJpeg");
+  allocated(qi, sizeof(QImage), "loadImageFromJpeg");
   QImage * qir;
   switch ((rotate + 4) % 4) {
     case 1:
@@ -100,7 +100,7 @@ static QImage * scaleCropImage(QFuture<QImage *> & futureOriginal, ScaleCropRule
   QImage cropped1 = scaled.copy(cr);
   QImage colored = scr.co.applyOn(cropped1);
   QImage * the_result = new QImage(colored);
-  allocated(the_result, "cropped");
+  allocated(the_result, sizeof(QImage), "cropped");
   //qDebug()<<"scaled: "<<size2string(scaled.size())<<" ; rect: "<<cr.x()<<":"<<cr.y()<<"/"<<size2string(cr.size())<<" ; cropped1: "<<size2string(cropped1.size());
   //qDebug()<<"cropped: "<<size2string(cropped->size());
   // FIXME: copy only the existing subrect, not to fill with black...

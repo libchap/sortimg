@@ -7,7 +7,7 @@
 
 
 
-void allocated(const void * ptr, const QString & comment);
+void allocated(const void * ptr, long size, const QString & comment);
 void freed(const void * ptr);
 void printAllocs();
 
