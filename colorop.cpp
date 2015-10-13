@@ -96,7 +96,7 @@ QImage changeImage( const QImage& image, int value )
 
 
 // brightness is multiplied by 100 in order to avoid floating point numbers
-static QImage changeBrightness( const QImage& image, int brightness )
+QImage changeBrightness( const QImage& image, int brightness )
     {
     if( brightness == 0 ) // no change
         return image;
@@ -105,7 +105,7 @@ static QImage changeBrightness( const QImage& image, int brightness )
 
 /* // not needed now
 // contrast is multiplied by 100 in order to avoid floating point numbers
-static QImage changeContrast( const QImage& image, int contrast )
+QImage changeContrast( const QImage& image, int contrast )
     {
     if( contrast == 100 ) // no change
         return image;
@@ -113,20 +113,10 @@ static QImage changeContrast( const QImage& image, int contrast )
     }
 
 // gamma is multiplied by 100 in order to avoid floating point numbers
-static QImage changeGamma( const QImage& image, int gamma )
+QImage changeGamma( const QImage& image, int gamma )
     {
     if( gamma == 100 ) // no change
         return image;
     return changeImage< changeGamma >( image, gamma );
     }
     */
-    
-QImage ColorOperation::applyOn(const QImage & qi) const {
-  return changeBrightness(qi, this->brightness);
-}
-
-QString ColorOperation::toString() const {
-  QString s;
-  s.sprintf(" ColorOperation: brightness %d%%", brightness);
-  return s;
-}

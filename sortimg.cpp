@@ -136,7 +136,7 @@ void SortImg::keyPressEvent(QKeyEvent * event) {
       rotateRight();
       break;
     case Qt::Key_K: // debug
-      status(scr.toString());
+      status(view_scr.toString());
       break;
     case Qt::Key_L: // debug
       status(main_iterator->getSCR().toString());
@@ -145,10 +145,10 @@ void SortImg::keyPressEvent(QKeyEvent * event) {
       printAllocs();
       break;
     case Qt::Key_Comma:
-      increaseBrightness();
+      adjustBrightness(+1);
       break;
     case Qt::Key_Period:
-      decreaseBrightness();
+      adjustBrightness(-1);
       break;
     case Qt::Key_Delete:
       markDelete();
@@ -160,26 +160,24 @@ void SortImg::keyPressEvent(QKeyEvent * event) {
 
 void SortImg::wheelEvent(QWheelEvent * event) {
   QMainWindow::wheelEvent(event);
-  if (ibuf == NULL) return;
+  if (ibuf == NULL || main_iterator == NULL) return;
 
-  int x = event->x() - pixmapViewer.x();
-  int y = event->y() - pixmapViewer.y();
+  double x = (event->x() - pixmapViewer.x()) / (double) pixmapViewer.width();
+  double y = (event->y() - pixmapViewer.y()) / (double) pixmapViewer.height();
 
   double mydelta = double(event->delta()) / si_settings_mousewheel_step_base;
   double ratio = pow(si_settings_mousewheel_zoom_base, mydelta);
-  double ratio_pre = ratio;
   //qDebug() << "Zooming to ratio " << ratio << " (mydelta " << mydelta << ")";
 
-  QString cn = **main_iterator;
+  view_scr.rezoom(ratio, x, y);
+  refreshCurrent();
 
-  for (int i = 1; i <= si_settings_preload_zooms; i++, ratio_pre *= ratio) {
-    ibuf->prepareRescale(cn, scr.rezoom(ratio_pre, x, y));
+  ScaleCropRule futurescr(view_scr);
+  futurescr.retarget(pixmapViewer.size());
+  for (int i = 1; i <= si_settings_preload_zooms; i++) {
+    futurescr.rezoom(ratio, x, y);
+    ibuf->prepareRescale(view_fname, futurescr);
   }
-  //qDebug() << "Pre-rezoom: " << scr.toString();
-  scr = scr.rezoom(ratio, x, y);
-  //qDebug() << "Post-rezoom: " << scr.toString();
-  QImage * rqi = ibuf->getRescaled(cn, scr);
-  pixmapViewer.changePixmap(QPixmap::fromImage(*rqi));
 }
 
 
@@ -194,7 +192,7 @@ void SortImg::showEvent(QShowEvent * event) {
 void SortImg::resizeEvent(QResizeEvent* event) {
   QMainWindow::resizeEvent(event);
   if (ibuf != NULL) {
-    ibuf->default_scr = ScaleCropRule(pixmapViewer.size());
+    ibuf->default_scr.retarget(pixmapViewer.size());
   }
 }
 
@@ -202,7 +200,7 @@ void SortImg::resizeEvent(QResizeEvent* event) {
 bool SortImg::reInitialize(const QString & path) {
   if (ibuf != NULL) delete ibuf;
   ibuf = new ImageBuffer();
-  ibuf->default_scr = ScaleCropRule(pixmapViewer.size());
+  //ibuf->default_scr = ScaleCropRule(pixmapViewer.size());
 
   if (fbank != NULL) delete fbank;
   fbank = new FileBank(path);
@@ -231,12 +229,6 @@ void SortImg::finalizeResize() {
   fbank->finalizeTmpDir();
 }
 
-// changes ibuf's default SCR according to what shall be prepared
-void SortImg::disputeDefaultSCR(const FBIterator & accordingTo) {
-  ScaleCropRule atscr = accordingTo.getSCR();
-  if (!atscr.isNull()) ibuf->default_scr = atscr.retarget(ScaleCropRule(pixmapViewer.size()));
-  else ibuf->default_scr = ScaleCropRule(pixmapViewer.size());
-}
 
 // call when moved to another source photo
 void SortImg::viewCurrent() {
@@ -247,20 +239,33 @@ void SortImg::viewCurrent() {
     return;
   }
 
-  disputeDefaultSCR(*main_iterator);
-  scr = ibuf->default_scr;
+  view_fname = **main_iterator;
+  view_origsize = ibuf->getOriginalSize(view_fname);
+  view_scr = (main_iterator)->getSCR();
+  view_trash_zoom = view_scr.isJustResize();
 
-  QString cn = **main_iterator;
-  QImage * currqi = ibuf->getRescaled(cn);
-  QString deletedMessage = fbank->isMarkedAsDeleted(cn) ? " DELETE!" : "";
-  if (currqi != NULL) {
-    pixmapViewer.changePixmap(QPixmap::fromImage(*currqi));
-    QString cnf = QFileInfo(cn).baseName();
-    status(QString("<b>") + cnf + "</b> (" + size2string(ibuf->getOriginalSize(cn)) + ") <b>"
+  if (!view_scr.hasTarget()) view_scr.retarget(view_origsize);
+
+  if (refreshCurrent()) {
+    QString deletedMessage = fbank->isMarkedAsDeleted(view_fname) ? " DELETE!" : "";
+    QString cnf = QFileInfo(view_fname).baseName();
+    status(QString("<b>") + cnf + "</b> (" + size2string(ibuf->getOriginalSize(view_fname)) + ") <b>"
            + main_iterator->getSCR().toShortString() + deletedMessage + "</b> ["
 	   + QString::number(main_iterator->item_index() + 1) + "/"
 	   + QString::number(main_iterator->total_items()) + "]");
   }
+}
+
+// call when changed view_scr while staying at the same photo
+bool SortImg::refreshCurrent() {
+  if (ibuf == NULL || main_iterator == NULL) return 0;
+  ScaleCropRule futurescr(view_scr);
+  futurescr.retarget_to_bound(pixmapViewer.size());
+  QImage * currqi = ibuf->getRescaled(view_fname, futurescr);
+  if (currqi == NULL) return 0;
+  pixmapViewer.changePixmap(QPixmap::fromImage(*currqi));
+  // FIXME : delete currqi ??
+  return 1;
 }
 
 // got o next image and preload
@@ -275,7 +280,6 @@ void SortImg::next() {
   main_iterator->next_go();
   //ibuf->addRange(main_iterator->subiterator_post(si_settings_preload_images));
   FBIterator toAdd = main_iterator->next_get(si_settings_preload_images);
-  disputeDefaultSCR(toAdd);
   ibuf->addImage(*toAdd);
 
   viewCurrent();
@@ -292,23 +296,13 @@ void SortImg::prev() {
   main_iterator->prev_go();
   //ibuf->addRange(main_iterator->subiterator_post(si_settings_preload_images));
   FBIterator toAdd = main_iterator->prev_get(si_settings_preload_images);
-  disputeDefaultSCR(toAdd);
   ibuf->addImage(*toAdd);
 
   viewCurrent();
 }
 
 void SortImg::markResize(int res) {
-  //targetSize = res;
-
-  ScaleCropRule old_scr = main_iterator->getSCR();
-
-  if (old_scr.isJustResize()) {
-    main_iterator->setSCR(ScaleCropRule(QSize(res, res)));
-  }
-  else {
-    main_iterator->setSCR(old_scr.retarget(ScaleCropRule(QSize(res, res))));
-  }
+  view_scr.retarget(res);
 
   status(QString("<b>Resize to: %1 !</b>").arg(res));
 }
@@ -316,74 +310,45 @@ void SortImg::markResize(int res) {
 void SortImg::markCrop() {
   if (main_iterator == NULL || ibuf == NULL) return;
 
-  ScaleCropRule old_scr = main_iterator->getSCR();
-  if (old_scr.isNull()) {
-    old_scr = ScaleCropRule(ibuf->getOriginalSize(**main_iterator));
-  }
-
-  if (old_scr.isJustResize()) {
-    ScaleCropRule new_scr = scr.retarget(old_scr);
-    main_iterator->setSCR(new_scr);
-    status(QString("<b>Crop: ") + new_scr.toString() + "</b>");
+  if (view_trash_zoom) {
+    status(QString("<b>Crop: ") + view_scr.toString() + "</b>");
+    view_trash_zoom = 0;
   }
   else {
-    main_iterator->setSCR(ScaleCropRule(old_scr.cropRect().size()));
     status("<b>DO NOT CROP</b>");
+    view_trash_zoom = 1;
   }
 }
 
 void SortImg::rotateLeft() {
   if (main_iterator == NULL || ibuf == NULL) return;
 
-  ScaleCropRule miscr = main_iterator->getSCR();
-  if (miscr.isNull()) miscr = ScaleCropRule(ibuf->getOriginalSize(**main_iterator));
-  miscr.rotate_left();
-  qDebug()<<"Rotleft "<<miscr.toString();
-  main_iterator->setSCR(miscr);
-
-  QString cn = **main_iterator;
-  scr.rotate_left();
-  //qDebug() << "Post-rezoom: " << scr.toString();
-  QImage * rqi = ibuf->getRescaled(cn, scr);
-  pixmapViewer.changePixmap(QPixmap::fromImage(*rqi));
-  // FIXME : delete rqi ??
+  view_scr.rotate_left();
+  refreshCurrent();
 }
+
 
 void SortImg::rotateRight() {
   if (main_iterator == NULL || ibuf == NULL) return;
 
-  ScaleCropRule miscr = main_iterator->getSCR();
-  if (miscr.isNull()) miscr = ScaleCropRule(ibuf->getOriginalSize(**main_iterator));
-  miscr.rotate_right();
-  qDebug()<<"Rotright "<<miscr.toString();
-  main_iterator->setSCR(miscr);
-
-  QString cn = **main_iterator;
-  scr.rotate_right();
-  //qDebug() << "Post-rezoom: " << scr.toString();
-  QImage * rqi = ibuf->getRescaled(cn, scr);
-  pixmapViewer.changePixmap(QPixmap::fromImage(*rqi));
-  // FIXME : delete rqi ??
+  view_scr.rotate_right();
+  refreshCurrent();
 }
 
-void SortImg::increaseBrightness() {
+void SortImg::adjustBrightness(int sgn) {
   if (main_iterator == NULL || ibuf == NULL) return;
 
-  ScaleCropRule miscr = main_iterator->getSCR();
-  miscr.co.increaseBrightness();
-  main_iterator->setSCR(miscr);
-  
-  viewCurrent(); // FIXME ! add pre-computing further rebrightnesses
-}
+  int amount = sgn * si_settings_brightness_step;
 
-void SortImg::decreaseBrightness() {
-  if (main_iterator == NULL || ibuf == NULL) return;
+  view_scr.brightness += amount;
+  refreshCurrent();
 
-  ScaleCropRule miscr = main_iterator->getSCR();
-  miscr.co.decreaseBrightness();
-  main_iterator->setSCR(miscr);
-  
-  viewCurrent(); // FIXME ! add pre-computing further rebrightnesses
+  ScaleCropRule futurescr(view_scr);
+  futurescr.retarget(pixmapViewer.size());
+  for (int i = 1; i <= si_settings_preload_zooms; i++) {
+    futurescr.brightness += amount;
+    ibuf->prepareRescale(view_fname, futurescr);
+  }
 }
 
 void SortImg::markDelete() {
@@ -404,13 +369,14 @@ void SortImg::markDelete() {
 // do the changes done by the user into tmpDir
 void SortImg::targetResize() {
   if (fbank == NULL || ibuf == NULL || main_iterator == NULL) return;
-  const ScaleCropRule & targetSCR = main_iterator->getSCR();
-  if (!targetSCR.isNull()) {
-    QString cn = **main_iterator;
-    //ScaleCropRule sc(targetSize, targetSize, 0, 0, targetSize, targetSize);
-    ibuf->rescaleToFile(cn, targetSCR, fbank->getTmpNameFor(cn));
-
-    targetSize = 0;
+  ScaleCropRule oldtarget = main_iterator->getSCR();
+  ScaleCropRule newtarget(view_scr);
+  if (view_trash_zoom) {
+    newtarget.resize_w = 1.0; newtarget.resize_h = 1.0; newtarget.crop_x = 0.0; newtarget.crop_y = 0.0;
+  }
+  if (newtarget != oldtarget) {
+    main_iterator->setSCR(newtarget);
+    ibuf->rescaleToFile(view_fname, newtarget, fbank->getTmpNameFor(view_fname));
   }
 }
 
