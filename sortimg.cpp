@@ -244,7 +244,8 @@ void SortImg::viewCurrent() {
   view_scr = (main_iterator)->getSCR();
   view_trash_zoom = view_scr.isJustResize();
 
-  if (!view_scr.hasTarget()) view_scr.retarget(view_origsize);
+  //if (!view_scr.hasTarget())
+    view_scr.retarget(view_origsize);
 
   if (refreshCurrent()) {
     QString deletedMessage = fbank->isMarkedAsDeleted(view_fname) ? " DELETE!" : "";
@@ -370,6 +371,7 @@ void SortImg::markDelete() {
 void SortImg::targetResize() {
   if (fbank == NULL || ibuf == NULL || main_iterator == NULL) return;
   ScaleCropRule oldtarget = main_iterator->getSCR();
+  oldtarget.retarget(view_origsize);
   ScaleCropRule newtarget(view_scr);
   if (view_trash_zoom) {
     newtarget.resize_w = 1.0; newtarget.resize_h = 1.0; newtarget.crop_x = 0.0; newtarget.crop_y = 0.0;

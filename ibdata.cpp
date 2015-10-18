@@ -44,13 +44,14 @@ static QImage * loadImageFromJpeg(QString jpegName, int rotate) {
   QImage * qi = new QImage(jpegName);
   allocated(qi, sizeof(QImage), "loadImageFromJpeg");
   QImage * qir;
-  switch ((rotate + 4) % 4) {
+  //switch ((rotate + 4) % 4) {
+  switch (rotate) {
     case 1:
       qir = rotate90(qi);
       freed(qi);
       delete qi;
       break;
-    case 2:
+    case 3:
       qir = rotate270(qi);
       freed(qi);
       delete qi;
@@ -191,9 +192,12 @@ void ImageBuffer::IBData::waitForFileRescaling() {
 }
 
 QSize ImageBuffer::IBData::getOriginalSize() {
-  int w, h;
+  int w, h, temp;
   w = exifData.getTagXResolution();
   h = exifData.getTagYResolution();
+  if (exifData.getTagOrientation() == 6 || exifData.getTagOrientation() == 8) {
+	  temp = w; w = h; h = temp;
+  }
   if (w == 0 || h == 0) {
     w = originalImage.result()->width();
     h = originalImage.result()->height();
