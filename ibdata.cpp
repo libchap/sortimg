@@ -28,6 +28,49 @@ static QImage * rotate270(const QImage * src) {
     return dst;
 }
 
+
+// this is the usage of stolen 'resampler' library to resample images by various algorithms
+#include "resampler.h"
+// TODO add switch for various algoritmhs
+static QImage scale_with_resampler(const QImage * src, QSize newsize) {
+	int src_width = src->width(), src_height = src->height(), dst_width = newsize.width(), dst_height = newsize.height();
+	int dst_width_aspect = (int) (src_width * dst_height / (double) src_height + 0.5), dst_height_aspect = (int) (src_height * dst_width / (double) src_width + 0.5);
+	if (dst_width_aspect < dst_width) dst_width = dst_width_aspect; if (dst_height_aspect < dst_height) dst_height = dst_height_aspect;
+
+	const float filter_scale = 1.0f; /* this can be slightly lower to sharpen */
+	Resampler rR(src_width, src_height, dst_width, dst_height, Resampler::BOUNDARY_CLAMP, 0.0f, 1.0f, "lanczos4", NULL, NULL, filter_scale, filter_scale);
+	Resampler rG(src_width, src_height, dst_width, dst_height, Resampler::BOUNDARY_CLAMP, 0.0f, 1.0f, "lanczos4", rR.get_clist_x(), rR.get_clist_y(), filter_scale, filter_scale);
+	Resampler rB(src_width, src_height, dst_width, dst_height, Resampler::BOUNDARY_CLAMP, 0.0f, 1.0f, "lanczos4", rR.get_clist_x(), rR.get_clist_y(), filter_scale, filter_scale);
+	Resampler rA(src_width, src_height, dst_width, dst_height, Resampler::BOUNDARY_CLAMP, 0.0f, 1.0f, "lanczos4", rR.get_clist_x(), rR.get_clist_y(), filter_scale, filter_scale);
+
+	int i, j;
+
+	float * lineR = new float[src_width], * lineG = new float[src_width], * lineB = new float[src_width], * lineA = new float[src_width];
+	for (i = 0; i < src_height; i++) {
+		QRgb * line = (QRgb *) src->scanLine(i);
+		for (j = 0; j < src_width; j++) {
+			lineR[j] = qRed(line[j]) * (1.0f/255.0f); lineG[j] = qGreen(line[j]) * (1.0f/255.0f); // FIXME: consider gamma correction for RGB channels
+			lineB[j] = qBlue(line[j]) * (1.0f/255.0f); lineA[j] = qAlpha(line[j]) * (1.0f/255.0f);
+		}
+		rR.put_line(lineR); rG.put_line(lineG); rB.put_line(lineB); rA.put_line(lineA); 
+	}
+
+	QImage dst(dst_width, dst_height, src->format());
+	for (i = 0; i < dst_height; i++) {
+		const float * oR = rR.get_line(), * oG = rG.get_line(), * oB = rB.get_line(), * oA = rA.get_line();
+		for (j = 0; j < dst_width; j++) {
+#define f2ch(ch) ((int) ((ch) * 255.0f + 0.5f))
+			QRgb x = qRgba(f2ch(oR[j]), f2ch(oG[j]), f2ch(oB[j]), f2ch(oA[j]) /* or 255 ? ;) */);
+			dst.setPixel(j, i, x);
+		}
+	}
+	
+	delete [] lineR; delete [] lineG; delete [] lineB; delete [] lineA;
+	return dst;
+}
+
+
+
 // fix orientation and resolution tags in exif according to current situation
 // save the exif to the jpeg file created by QImage::save
 static void saveExifModified(const QString & targetJpeg, const StupidExif & exif, const QSize & jpegSize) {
@@ -83,11 +126,12 @@ static QImage * scaleCropImage(QFuture<QImage *> & futureOriginal, ScaleCropRule
       break;
 
   }
-  QImage scaled = rotated->scaled(
+ /* QImage scaled = rotated->scaled(
     scr.scaleSize(),
     Qt::KeepAspectRatio,
     (fast ? Qt::FastTransformation : Qt::SmoothTransformation)
-  );
+  ); */
+  QImage scaled = scale_with_resampler(rotated, scr.scaleSize());
   if (scr.rotate != 0) {
     freed(rotated);
     delete rotated;
@@ -102,6 +146,7 @@ static QImage * scaleCropImage(QFuture<QImage *> & futureOriginal, ScaleCropRule
   //qDebug()<<"cropped: "<<size2string(cropped->size());
   // FIXME: copy only the existing subrect, not to fill with black...
 
+  fast = fast; // Wunused_parameter
   return the_result;
 }
 
