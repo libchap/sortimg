@@ -32,16 +32,16 @@ static QImage * rotate270(const QImage * src) {
 // this is the usage of stolen 'resampler' library to resample images by various algorithms
 #include "resampler.h"
 // TODO add switch for various algoritmhs
-static QImage scale_with_resampler(const QImage * src, QSize newsize) {
+static QImage scale_with_resampler(const QImage * src, QSize newsize, const char * filter) {
 	int src_width = src->width(), src_height = src->height(), dst_width = newsize.width(), dst_height = newsize.height();
 	int dst_width_aspect = (int) (src_width * dst_height / (double) src_height + 0.5), dst_height_aspect = (int) (src_height * dst_width / (double) src_width + 0.5);
 	if (dst_width_aspect < dst_width) dst_width = dst_width_aspect; if (dst_height_aspect < dst_height) dst_height = dst_height_aspect;
 
 	const float filter_scale = 1.0f; /* this can be slightly lower to sharpen */
-	Resampler rR(src_width, src_height, dst_width, dst_height, Resampler::BOUNDARY_CLAMP, 0.0f, 1.0f, "lanczos4", NULL, NULL, filter_scale, filter_scale);
-	Resampler rG(src_width, src_height, dst_width, dst_height, Resampler::BOUNDARY_CLAMP, 0.0f, 1.0f, "lanczos4", rR.get_clist_x(), rR.get_clist_y(), filter_scale, filter_scale);
-	Resampler rB(src_width, src_height, dst_width, dst_height, Resampler::BOUNDARY_CLAMP, 0.0f, 1.0f, "lanczos4", rR.get_clist_x(), rR.get_clist_y(), filter_scale, filter_scale);
-	Resampler rA(src_width, src_height, dst_width, dst_height, Resampler::BOUNDARY_CLAMP, 0.0f, 1.0f, "lanczos4", rR.get_clist_x(), rR.get_clist_y(), filter_scale, filter_scale);
+	Resampler rR(src_width, src_height, dst_width, dst_height, Resampler::BOUNDARY_CLAMP, 0.0f, 1.0f, filter, NULL, NULL, filter_scale, filter_scale);
+	Resampler rG(src_width, src_height, dst_width, dst_height, Resampler::BOUNDARY_CLAMP, 0.0f, 1.0f, filter, rR.get_clist_x(), rR.get_clist_y(), filter_scale, filter_scale);
+	Resampler rB(src_width, src_height, dst_width, dst_height, Resampler::BOUNDARY_CLAMP, 0.0f, 1.0f, filter, rR.get_clist_x(), rR.get_clist_y(), filter_scale, filter_scale);
+	Resampler rA(src_width, src_height, dst_width, dst_height, Resampler::BOUNDARY_CLAMP, 0.0f, 1.0f, filter, rR.get_clist_x(), rR.get_clist_y(), filter_scale, filter_scale);
 
 	int i, j;
 
@@ -106,7 +106,7 @@ static QImage * loadImageFromJpeg(QString jpegName, int rotate) {
 }
 
 // grab original (unresized) image data from a QFuture, apply SCR on it (rotate, resize, crop)
-static QImage * scaleCropImage(QFuture<QImage *> & futureOriginal, ScaleCropRule scr, bool fast) {
+static QImage * scaleCropImage(QFuture<QImage *> & futureOriginal, ScaleCropRule scr, ImageBuffer::RecaleMethod method) {
   QImage * rotated = futureOriginal.result();
 
   qDebug() << "Rotating: " << scr.rotate;
@@ -126,12 +126,23 @@ static QImage * scaleCropImage(QFuture<QImage *> & futureOriginal, ScaleCropRule
       break;
 
   }
- /* QImage scaled = rotated->scaled(
-    scr.scaleSize(),
-    Qt::KeepAspectRatio,
-    (fast ? Qt::FastTransformation : Qt::SmoothTransformation)
-  ); */
-  QImage scaled = scale_with_resampler(rotated, scr.scaleSize());
+  
+  QImage scaled;
+  switch (method) {
+    case ImageBuffer::QTFAST:
+      scaled = rotated->scaled(scr.scaleSize(), Qt::KeepAspectRatio, Qt::SmoothTransformation);
+      break;
+    case ImageBuffer::QTSLOW:
+      scaled = rotated->scaled(scr.scaleSize(), Qt::KeepAspectRatio, Qt::FastTransformation);
+      break;
+    case ImageBuffer::RLANCZOS4:
+      scaled = scale_with_resampler(rotated, scr.scaleSize(), "lanczos4");
+      break;
+    default:
+      scaled = *rotated;
+      break;
+  }
+  
   if (scr.rotate != 0) {
     freed(rotated);
     delete rotated;
@@ -146,13 +157,12 @@ static QImage * scaleCropImage(QFuture<QImage *> & futureOriginal, ScaleCropRule
   //qDebug()<<"cropped: "<<size2string(cropped->size());
   // FIXME: copy only the existing subrect, not to fill with black...
 
-  fast = fast; // Wunused_parameter
   return the_result;
 }
 
 // the same as before but save the result into file (together with provided exif)
-static bool scaleCropToFile(QFuture<QImage *> & futureOriginal, ScaleCropRule scr, bool fast, QString target, const StupidExif & exif) {
-  QImage * sced = scaleCropImage(futureOriginal, scr, fast);
+static bool scaleCropToFile(QFuture<QImage *> & futureOriginal, ScaleCropRule scr, ImageBuffer::RecaleMethod method, QString target, const StupidExif & exif) {
+  QImage * sced = scaleCropImage(futureOriginal, scr, method);
   sced->save(target, 0, si_settings_output_jpeg_quality);
   //QFile::copy(target, target + ".woExif.jpg"); // debug
   saveExifModified(target, exif, sced->size());
@@ -189,13 +199,13 @@ ImageBuffer::IBData::~IBData() {
 }
 
 // for the loaded image, run the rescale in the baground to be (possibly) used later
-void ImageBuffer::IBData::prepareSC(ScaleCropRule scr, bool fast) {
+void ImageBuffer::IBData::prepareSC(ScaleCropRule scr, RecaleMethod method) {
   QString scrs = scr.toString();
   qDebug() << "prepare: " << scrs;
   if (rescales.contains(scrs)) return;
   rescales.insert(
     scrs,
-    QtConcurrent::run(scaleCropImage, originalImage, scr, fast)
+    QtConcurrent::run(scaleCropImage, originalImage, scr, method)
   );
 }
 
@@ -224,7 +234,7 @@ void ImageBuffer::IBData::unprepareSC(ScaleCropRule scr) {
 void ImageBuffer::IBData::fileSC(ScaleCropRule scr, const QString & targetFile) {
   waitForFileRescaling();
   fileRescalingRunning = true;
-  fileRescaling = QtConcurrent::run(scaleCropToFile, originalImage, scr, false, targetFile, exifData);
+  fileRescaling = QtConcurrent::run(scaleCropToFile, originalImage, scr, ImageBuffer::RLANCZOS4, targetFile, exifData);
 }
 
 // check if all the fileSC have finished, wait if not

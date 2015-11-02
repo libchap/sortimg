@@ -18,6 +18,9 @@ void ImageBuffer::addImage(const QString & fileName) {
   if (default_scr.hasTarget()) {
     prepareRescale(fileName);
   }
+  else {
+    qDebug()<<"WARNING!! no default SCR for pre-rescaling images!";
+  }
 }
 
 void ImageBuffer::addRange(FBIterator && range) {

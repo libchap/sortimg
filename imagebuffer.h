@@ -28,9 +28,12 @@ class ImageBuffer;
 class ImageBuffer {
 // Q_OBJECT
 
+public:
+  typedef enum {
+    QTFAST, QTSLOW, RLANCZOS4
+  } RecaleMethod;
 
 protected:
-
   class IBData {
     // for a single input file, store its various resizes,
     // do the resizes as asked by the user
@@ -40,7 +43,7 @@ protected:
     IBData(const QString & filename);
     ~IBData();
 
-    void prepareSC(ScaleCropRule scr, bool fast = false);
+    void prepareSC(ScaleCropRule scr, RecaleMethod method = RLANCZOS4);
     QImage * getSC(ScaleCropRule scr);
     void unprepareSC(ScaleCropRule scr);
 

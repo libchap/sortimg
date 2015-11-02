@@ -200,7 +200,7 @@ void SortImg::resizeEvent(QResizeEvent* event) {
 bool SortImg::reInitialize(const QString & path) {
   if (ibuf != NULL) delete ibuf;
   ibuf = new ImageBuffer();
-  //ibuf->default_scr = ScaleCropRule(pixmapViewer.size());
+  ibuf->default_scr.retarget(pixmapViewer.size());
 
   if (fbank != NULL) delete fbank;
   fbank = new FileBank(path);
