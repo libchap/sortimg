@@ -41,7 +41,7 @@ void ImageBuffer::removeImage(const QString & fileName) {
 void ImageBuffer::prepareRescale(const QString & fileName, ScaleCropRule scr) {
   if (scr.hasTarget() && !fileName.isEmpty() && images.contains(fileName)) {
     //qDebug() << "Preparing rescale (" << fileName << ") to : " << scr.toString();
-    images[fileName]->prepareSC(scr);
+    images[fileName]->prepareSC(scr, QTSLOW);
   }
 }
 
@@ -62,6 +62,7 @@ void ImageBuffer::waitForFileRescales() {
 QImage * ImageBuffer::getRescaled(const QString & fileName, ScaleCropRule scr) {
   //qDebug() << "getRescaled: " << fileName << "; " << scr.toString() << "; " << images.contains(fileName);
   if (scr.hasTarget() && !fileName.isEmpty() && images.contains(fileName)) {
+	images[fileName]->prepareSC(scr, QTSLOW);
     return images[fileName]->getSC(scr);
   }
   else return NULL;

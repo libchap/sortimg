@@ -129,14 +129,15 @@ static QImage * scaleCropImage(QFuture<QImage *> & futureOriginal, ScaleCropRule
   
   QImage scaled;
   switch (method) {
-    case ImageBuffer::QTFAST:
+    case ImageBuffer::QTSLOW:
       scaled = rotated->scaled(scr.scaleSize(), Qt::KeepAspectRatio, Qt::SmoothTransformation);
       break;
-    case ImageBuffer::QTSLOW:
+    case ImageBuffer::QTFAST:
       scaled = rotated->scaled(scr.scaleSize(), Qt::KeepAspectRatio, Qt::FastTransformation);
       break;
     case ImageBuffer::RLANCZOS4:
       scaled = scale_with_resampler(rotated, scr.scaleSize(), "lanczos4");
+      //qDebug()<<"WARNING: slow Lanczos !!";
       break;
     default:
       scaled = *rotated;
