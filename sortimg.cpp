@@ -207,7 +207,7 @@ bool SortImg::reInitialize(const QString & path) {
   if (main_iterator != NULL) delete main_iterator;
   main_iterator = fbank->iterator();
   if (main_iterator->isValid()/*ib->importDirectory(path)*/) {
-    ibuf->addRange(main_iterator->subiterator_post(si_settings_preload_images));
+    ibuf->addRange(main_iterator->subiterator_post(si_settings_preload_images_min));
     viewCurrent();
   }
   else {
@@ -277,10 +277,10 @@ void SortImg::next() {
 
   targetResize();
 
-  ibuf->removeImage(*main_iterator->prev_get(si_settings_preload_images));
+  ibuf->removeImage(*main_iterator->prev_get(si_settings_preload_images_max));
   main_iterator->next_go();
   //ibuf->addRange(main_iterator->subiterator_post(si_settings_preload_images));
-  FBIterator toAdd = main_iterator->next_get(si_settings_preload_images);
+  FBIterator toAdd = main_iterator->next_get(si_settings_preload_images_min);
   ibuf->addImage(*toAdd);
 
   viewCurrent();
@@ -293,10 +293,10 @@ void SortImg::prev() {
 
   targetResize();
 
-  ibuf->removeImage(*main_iterator->next_get(si_settings_preload_images));
+  ibuf->removeImage(*main_iterator->next_get(si_settings_preload_images_max));
   main_iterator->prev_go();
   //ibuf->addRange(main_iterator->subiterator_post(si_settings_preload_images));
-  FBIterator toAdd = main_iterator->prev_get(si_settings_preload_images);
+  FBIterator toAdd = main_iterator->prev_get(si_settings_preload_images_min);
   ibuf->addImage(*toAdd);
 
   viewCurrent();

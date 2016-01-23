@@ -52,7 +52,7 @@ protected:
     QSize getOriginalSize();
 
     void waitForFileRescaling();
-
+    void waitForAllRescaling();
 
   protected:
     QFuture<QImage *> originalImage;
@@ -61,7 +61,7 @@ protected:
     QHash<QString, QFuture<QImage *> > rescales; // indexed by ScaleCropRule::toString()
 
     QFuture<bool> fileRescaling;
-    bool fileRescalingRunning = false;
+    volatile bool fileRescalingRunning = false;
 
 
   };

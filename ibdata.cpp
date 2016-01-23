@@ -247,6 +247,14 @@ void ImageBuffer::IBData::waitForFileRescaling() {
   }
 }
 
+void ImageBuffer::IBData::waitForAllRescaling() {
+  foreach (QFuture<QImage *> resc, rescales) {
+    volatile QImage * resc_res = resc.result();
+    resc_res = resc_res; // -Wunused_variable
+  }
+  waitForFileRescaling();
+}
+
 QSize ImageBuffer::IBData::getOriginalSize() {
   int w, h, temp;
   w = exifData.getTagXResolution();

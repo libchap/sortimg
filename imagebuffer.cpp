@@ -32,6 +32,7 @@ void ImageBuffer::addRange(FBIterator && range) {
 
 void ImageBuffer::removeImage(const QString & fileName) {
   if (!fileName.isEmpty() && images.contains(fileName)) {
+	images[fileName]->waitForAllRescaling();
     delete images[fileName];
     images.remove(fileName);
   }
@@ -40,7 +41,7 @@ void ImageBuffer::removeImage(const QString & fileName) {
 // prepareSC wrapper for IBData
 void ImageBuffer::prepareRescale(const QString & fileName, ScaleCropRule scr) {
   if (scr.hasTarget() && !fileName.isEmpty() && images.contains(fileName)) {
-    //qDebug() << "Preparing rescale (" << fileName << ") to : " << scr.toString();
+    qDebug() << "Preparing rescale (" << fileName << ") to : " << scr.toString();
     images[fileName]->prepareSC(scr, QTSLOW);
   }
 }
