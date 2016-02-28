@@ -5,9 +5,9 @@
 #define si_settings_output_jpeg_quality 96
 
 // how many images preload when walking through the source directory
-#define si_settings_preload_images_min 5
+#define si_settings_preload_images_min 8
 // how many images is too much to handle in memory while walking through t.s.d.
-#define si_settings_preload_images_max 7
+#define si_settings_preload_images_max 15
 // how many rescales pre-do when zooming with mouse wheel
 #define si_settings_preload_zooms 3
 // how many rescales pre-do when in/decreasing brightness

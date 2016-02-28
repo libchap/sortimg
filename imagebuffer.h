@@ -69,7 +69,7 @@ protected:
 
 public:
   ~ImageBuffer();
-  void addImage(const QString & fileName);
+  void addImage(const QString & fileName, bool prepare = true);
   void addRange(FBIterator && range);
   void removeImage(const QString & fileName);
   void prepareRescale(const QString & fileName, ScaleCropRule scr);

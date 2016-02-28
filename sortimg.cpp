@@ -53,6 +53,8 @@ SortImg::SortImg() : pixmapViewer(QPixmap(":/title.jpg")) {
   pixmapViewer.setMaximumSize(si_settings_initial_width, si_settings_initial_height);
 
   status("<b>SortImg</b> 1.0 &copy; Libcha 2015");
+  
+  default_vss = 0;
 }
 
 SortImg::~SortImg() {
@@ -135,6 +137,14 @@ void SortImg::keyPressEvent(QKeyEvent * event) {
     case Qt::Key_P:
       rotateRight();
       break;
+    case Qt::Key_W:
+      if (event->modifiers() & Qt::ShiftModifier) {
+	    applyResizeToAll();
+	  }
+	  else {
+	    setResizeAsDefault();
+	  }
+	  break;
     case Qt::Key_K: // debug
       status(view_scr.toString());
       break;
@@ -248,10 +258,16 @@ void SortImg::viewCurrent() {
     view_scr.retarget(view_origsize);
 
   if (refreshCurrent()) {
+	QString autoResize;
+    if (default_vss > 0 && !main_iterator->getSCR().hasTarget()) {
+		markResize(default_vss);
+		autoResize = "Auto Scale ";
+	}
+	  
     QString deletedMessage = fbank->isMarkedAsDeleted(view_fname) ? " DELETE!" : "";
     QString cnf = QFileInfo(view_fname).baseName();
     status(QString("<b>") + cnf + "</b> (" + size2string(ibuf->getOriginalSize(view_fname)) + ") <b>"
-           + main_iterator->getSCR().toShortString() + deletedMessage + "</b> ["
+       + autoResize + main_iterator->getSCR().toShortString() + deletedMessage + "</b> ["
 	   + QString::number(main_iterator->item_index() + 1) + "/"
 	   + QString::number(main_iterator->total_items()) + "]");
   }
@@ -380,6 +396,40 @@ void SortImg::targetResize() {
     main_iterator->setSCR(newtarget);
     ibuf->rescaleToFile(view_fname, newtarget, fbank->getTmpNameFor(view_fname));
   }
+}
+
+
+void SortImg::applyResizeToAll() {
+  if (fbank == NULL || ibuf == NULL) return;
+  int vss = view_scr.getTargetPx();
+  if (vss < 1) {
+    status(QString("<b>Cannot apply to all current zero resize.</b>"));
+    return;
+  }
+  
+  ScaleCropRule targ;
+  FBIterator * it = fbank->iterator();
+  int i, imax = it->total_items();
+  for (i = 0; i < imax; i++, it->next_go()) {
+    ibuf->addImage(**it, false);
+    targ.retarget(ibuf->getOriginalSize(**it));
+    targ.retarget(vss);
+    ibuf->rescaleToFile(**it, targ, fbank->getTmpNameFor(**it));
+  }
+  delete it;
+  status(QString("<b>Resized all to %1 !!</b>").arg(vss));
+}
+
+void SortImg::setResizeAsDefault() {
+  if (fbank == NULL || ibuf == NULL || main_iterator == NULL) return;
+  int vss = view_scr.getTargetPx();
+  if (vss < 1) {
+    status(QString("<b>Cannot set as default current zero resize.</b>"));
+    return;
+  }
+  
+  default_vss = vss;
+  status(QString("Resize to %1 set as default !").arg(vss));
 }
 
 

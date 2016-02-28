@@ -86,6 +86,11 @@ void ScaleCropRule::retarget_to_bound(QSize bound) {
   retarget(bound);
 }
 
+// WARNING this is something different than retarget(const QSize & targetSize) !!
 void ScaleCropRule::retarget(int targetPx) {
   retarget_to_bound(QSize(targetPx, targetPx));
+}
+
+int ScaleCropRule::getTargetPx() const {
+  return max(target_w, target_h);
 }

@@ -63,6 +63,9 @@ protected:
   void adjustBrightness(int sgn = +1);
 
   void finalizeResize();
+  
+  void setResizeAsDefault();
+  void applyResizeToAll();
 
   QString viewDirectoryDialog();
 
@@ -77,6 +80,7 @@ protected:
   QString view_fname;
   QSize view_origsize;
   bool view_trash_zoom;
+  int default_vss;
 
 
 private:

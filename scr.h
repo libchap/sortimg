@@ -37,6 +37,7 @@ struct ScaleCropRule {
   QString toShortString() const;
   QSize scaleSize() const { return QSize(target_w * resize_w, target_h * resize_h); }
   QRect cropRect() const;
+  int getTargetPx() const;
 
   bool isJustResize() const { return (resize_w == 1.0 && resize_h == 1.0 && crop_x == 0.0 && crop_y == 0.0); }
   bool hasTarget() const { return (target_w > 0 && target_h > 0); }
@@ -50,49 +51,6 @@ struct ScaleCropRule {
   void rotate_right();
 };
 
-/*
 
-struct ScaleCropRule {
-  int scale_w;
-  int scale_h;
-  int crop_x;
-  int crop_y;
-  int crop_w;
-  int crop_h;
-
-  int ini_rot;
-
-  ColorOperation co;
-
-  ScaleCropRule()
-      : scale_w(0), scale_h(0), crop_x(0), crop_y(0), crop_w(0), crop_h(0), ini_rot(0)
-      {  }
-  ScaleCropRule(int sw, int sh, int cx, int cy, int cw, int ch, int ir = 0)
-      : scale_w(sw), scale_h(sh), crop_x(cx), crop_y(cy), crop_w(cw), crop_h(ch), ini_rot(ir)
-      {  }
-  ScaleCropRule(const QSize & qs, int ir = 0)
-      : scale_w(qs.width()), scale_h(qs.height()), crop_x(0), crop_y(0), crop_w(qs.width()), crop_h(qs.height()), ini_rot(ir)
-      {  }
-  ScaleCropRule(int sw, int sh, int cx, int cy, int cw, int ch, int ir, ColorOperation coop)
-      : scale_w(sw), scale_h(sh), crop_x(cx), crop_y(cy), crop_w(cw), crop_h(ch), ini_rot(ir), co(coop)
-      {  }
-
-  ScaleCropRule rezoom(double scale_zoom, int keepx, int keepy);
-
-  QString toString() const;
-  QString toShortString() const;
-  QSize scaleSize() const { return QSize(scale_w, scale_h); }
-  QRect cropRect();
-
-  bool isJustResize() const { return (scale_w == crop_w && scale_h == crop_h && crop_x == 0 && crop_y == 0 && ini_rot == 0); }
-  bool isNull() const { return ((scale_w == 0 || scale_h == 0 || crop_w == 0 || crop_h == 0) && ini_rot == 0); }
-
-  ScaleCropRule retarget(const ScaleCropRule & targetSize);
-
-  void rotate_left();
-  void rotate_right();
-};
-
-*/
 
 #endif // #ifndef _SCR_H_

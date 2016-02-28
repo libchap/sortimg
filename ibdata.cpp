@@ -235,6 +235,7 @@ void ImageBuffer::IBData::unprepareSC(ScaleCropRule scr) {
 void ImageBuffer::IBData::fileSC(ScaleCropRule scr, const QString & targetFile) {
   waitForFileRescaling();
   fileRescalingRunning = true;
+  qDebug()<<"fileSC '"<<targetFile<<"' "<<scr.toString();
   fileRescaling = QtConcurrent::run(scaleCropToFile, originalImage, scr, ImageBuffer::RLANCZOS4, targetFile, exifData);
 }
 

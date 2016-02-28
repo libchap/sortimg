@@ -11,15 +11,15 @@ ImageBuffer::~ImageBuffer() {
 }
 
 // add image file to image buffer, prepare default SCR if specified
-void ImageBuffer::addImage(const QString & fileName) {
+void ImageBuffer::addImage(const QString & fileName, bool prepare) {
   if (!fileName.isEmpty() && !images.contains(fileName)) {
     images.insert(fileName, new IBData(fileName));
   }
-  if (default_scr.hasTarget()) {
+  if (prepare && default_scr.hasTarget()) {
     prepareRescale(fileName);
   }
   else {
-    qDebug()<<"WARNING!! no default SCR for pre-rescaling images!";
+    if (prepare) qDebug()<<"WARNING!! no default SCR for pre-rescaling images!";
   }
 }
 
@@ -50,6 +50,9 @@ void ImageBuffer::prepareRescale(const QString & fileName, ScaleCropRule scr) {
 void ImageBuffer::rescaleToFile(const QString & fileName, ScaleCropRule scr, const QString & targetFile) {
   if (scr.hasTarget() && !fileName.isEmpty() && images.contains(fileName)) {
     images[fileName]->fileSC(scr, targetFile);
+  }
+  else {
+    qDebug()<<"Warning: not rescaling to file: "<<images.contains(fileName)<<" '"<<fileName<<"' "<<scr.toString();
   }
 }
 
