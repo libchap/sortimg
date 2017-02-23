@@ -26,8 +26,8 @@
 #define si_settings_size_F 1900
 
 // initial coords of the program window
-#define si_settings_initial_width 1024
-#define si_settings_initial_height 768
+#define si_settings_initial_width 1440
+#define si_settings_initial_height 1080
 #define si_settings_initial_x 100
 #define si_settings_initial_y 100
 

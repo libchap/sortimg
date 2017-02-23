@@ -35,7 +35,8 @@ static QImage * rotate270(const QImage * src) {
 static QImage scale_with_resampler(const QImage * src, QSize newsize, const char * filter) {
 	int src_width = src->width(), src_height = src->height(), dst_width = newsize.width(), dst_height = newsize.height();
 	int dst_width_aspect = (int) (src_width * dst_height / (double) src_height + 0.5), dst_height_aspect = (int) (src_height * dst_width / (double) src_width + 0.5);
-	if (dst_width_aspect < dst_width) dst_width = dst_width_aspect; if (dst_height_aspect < dst_height) dst_height = dst_height_aspect;
+	if (dst_width_aspect < dst_width) dst_width = dst_width_aspect;
+	if (dst_height_aspect < dst_height) dst_height = dst_height_aspect;
 
 	const float filter_scale = 1.0f; /* this can be slightly lower to sharpen */
 	Resampler rR(src_width, src_height, dst_width, dst_height, Resampler::BOUNDARY_CLAMP, 0.0f, 1.0f, filter, NULL, NULL, filter_scale, filter_scale);
