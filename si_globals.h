@@ -26,10 +26,10 @@
 #define si_settings_size_F 1900
 
 // initial coords of the program window
-#define si_settings_initial_width 1024
-#define si_settings_initial_height 768
-#define si_settings_initial_x 100
-#define si_settings_initial_y 100
+#define si_settings_initial_width 1440
+#define si_settings_initial_height ((si_settings_initial_width) * 3 / 4)
+#define si_settings_initial_x 25
+#define si_settings_initial_y 25
 
 // quantity parameters for color changes
 #define si_settings_brightness_step 4
