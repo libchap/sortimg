@@ -1,3 +1,5 @@
+#include <cmath>
+
 #include "colorop.h"
 
 // following code is stolen from http://www.qtforum.org/article/26907/contrast-transparency-brightness.html
