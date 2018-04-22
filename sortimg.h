@@ -57,6 +57,7 @@ protected:
   void targetResize();
   void markDelete();
   void markCrop();
+  void markRename(const QString &prefix);
 
   void rotateLeft();
   void rotateRight();
@@ -87,6 +88,7 @@ private:
 
   QLabel statusbar;
   bool welcomeShown = true;
+  bool renameMode = false;
 
 };
 

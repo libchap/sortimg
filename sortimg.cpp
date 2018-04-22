@@ -69,6 +69,14 @@ void SortImg::keyPressEvent(QKeyEvent * event) {
 
   QMainWindow::keyPressEvent(event);
 
+  if (renameMode) {
+    //if (event->key() >= Qt::Key_A && event->key() <= Qt::Key_Z) {
+      markRename(event->text());
+    //}
+    renameMode = false;
+    return;
+  }
+
   // switch 1, see below switch 2
   switch (event->key()) {
     case Qt::Key_Escape:
@@ -145,6 +153,9 @@ void SortImg::keyPressEvent(QKeyEvent * event) {
 	    setResizeAsDefault();
 	  }
 	  break;
+    case Qt::Key_V:
+      renameMode = true;
+      break;
     case Qt::Key_K: // debug
       status(view_scr.toString());
       break;
@@ -379,6 +390,21 @@ void SortImg::markDelete() {
   else {
     fbank->markAsDeleted(cn);
     status("<b>DELETE !!</b>");
+  }
+}
+
+void SortImg::markRename(const QString &prefix) {
+  if (fbank == NULL || ibuf == NULL || main_iterator == NULL) return;
+
+  QString cn = **main_iterator;
+
+  if (prefix.at(0).isLetter()) {
+    status("<b>Rename to prefix " + prefix + " !</b>");
+    fbank->markRenamed(cn, prefix);
+  }
+  else {
+    status("<b>Do NOT rename!</b>");
+    fbank->markRenamed(cn, "");
   }
 }
 

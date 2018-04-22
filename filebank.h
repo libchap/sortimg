@@ -34,7 +34,7 @@ public:
   void markAsDeleted(const QString & file);
   void unmarkDeleted(const QString & file);
   bool isMarkedAsDeleted(const QString & file);
-
+  void markRenamed(const QString & file, const QString & prefix);
 
   void finalizeTmpDir(); // complicated, see source
 
