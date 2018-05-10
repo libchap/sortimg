@@ -18,6 +18,8 @@ class ImageBuffer;
 #include "stupid_exif.h"
 #include "memleak.h"
 
+#include "colorop.h"
+
 // class for managing and storing image data
 // for a subset of images in FileBank (only the ones user is gonna view in near future (past))
 // storing original images as well as various resized variants for each of them
@@ -27,9 +29,12 @@ class ImageBuffer;
 class ImageBuffer {
 // Q_OBJECT
 
+public:
+  typedef enum {
+    QTFAST, QTSLOW, RLANCZOS4
+  } RecaleMethod;
 
 protected:
-
   class IBData {
     // for a single input file, store its various resizes,
     // do the resizes as asked by the user
@@ -39,7 +44,7 @@ protected:
     IBData(const QString & filename);
     ~IBData();
 
-    void prepareSC(ScaleCropRule scr, bool fast = false);
+    void prepareSC(ScaleCropRule scr, RecaleMethod method = RLANCZOS4);
     QImage * getSC(ScaleCropRule scr);
     void unprepareSC(ScaleCropRule scr);
 
@@ -48,7 +53,7 @@ protected:
     QSize getOriginalSize();
 
     void waitForFileRescaling();
-
+    void waitForAllRescaling();
 
   protected:
     QFuture<QImage *> originalImage;
@@ -57,7 +62,7 @@ protected:
     QHash<QString, QFuture<QImage *> > rescales; // indexed by ScaleCropRule::toString()
 
     QFuture<bool> fileRescaling;
-    bool fileRescalingRunning = false;
+    volatile bool fileRescalingRunning = false;
 
 
   };
@@ -65,7 +70,7 @@ protected:
 
 public:
   ~ImageBuffer();
-  void addImage(const QString & fileName);
+  void addImage(const QString & fileName, bool prepare = true);
   void addRange(FBIterator && range);
   void removeImage(const QString & fileName);
   void prepareRescale(const QString & fileName, ScaleCropRule scr);

@@ -11,12 +11,15 @@ ImageBuffer::~ImageBuffer() {
 }
 
 // add image file to image buffer, prepare default SCR if specified
-void ImageBuffer::addImage(const QString & fileName) {
+void ImageBuffer::addImage(const QString & fileName, bool prepare) {
   if (!fileName.isEmpty() && !images.contains(fileName)) {
     images.insert(fileName, new IBData(fileName));
   }
-  if (!default_scr.isNull()) {
+  if (prepare && default_scr.hasTarget()) {
     prepareRescale(fileName);
+  }
+  else {
+    if (prepare) qDebug()<<"WARNING!! no default SCR for pre-rescaling images!";
   }
 }
 
@@ -29,6 +32,7 @@ void ImageBuffer::addRange(FBIterator && range) {
 
 void ImageBuffer::removeImage(const QString & fileName) {
   if (!fileName.isEmpty() && images.contains(fileName)) {
+	images[fileName]->waitForAllRescaling();
     delete images[fileName];
     images.remove(fileName);
   }
@@ -36,16 +40,19 @@ void ImageBuffer::removeImage(const QString & fileName) {
 
 // prepareSC wrapper for IBData
 void ImageBuffer::prepareRescale(const QString & fileName, ScaleCropRule scr) {
-  if (scr.scale_w > 0 && !fileName.isEmpty() && images.contains(fileName)) {
-    //qDebug() << "Preparing rescale (" << fileName << ") to : " << scr.toString();
-    images[fileName]->prepareSC(scr);
+  if (scr.hasTarget() && !fileName.isEmpty() && images.contains(fileName)) {
+    qDebug() << "Preparing rescale (" << fileName << ") to : " << scr.toString();
+    images[fileName]->prepareSC(scr, QTSLOW);
   }
 }
 
 // fileSC wraper for IBData
 void ImageBuffer::rescaleToFile(const QString & fileName, ScaleCropRule scr, const QString & targetFile) {
-  if (scr.scale_w > 0 && !fileName.isEmpty() && images.contains(fileName)) {
+  if (scr.hasTarget() && !fileName.isEmpty() && images.contains(fileName)) {
     images[fileName]->fileSC(scr, targetFile);
+  }
+  else {
+    qDebug()<<"Warning: not rescaling to file: "<<images.contains(fileName)<<" '"<<fileName<<"' "<<scr.toString();
   }
 }
 
@@ -58,7 +65,8 @@ void ImageBuffer::waitForFileRescales() {
 // getSC wraper for IBData
 QImage * ImageBuffer::getRescaled(const QString & fileName, ScaleCropRule scr) {
   //qDebug() << "getRescaled: " << fileName << "; " << scr.toString() << "; " << images.contains(fileName);
-  if (scr.scale_w > 0 && !fileName.isEmpty() && images.contains(fileName)) {
+  if (scr.hasTarget() && !fileName.isEmpty() && images.contains(fileName)) {
+	images[fileName]->prepareSC(scr, QTSLOW);
     return images[fileName]->getSC(scr);
   }
   else return NULL;

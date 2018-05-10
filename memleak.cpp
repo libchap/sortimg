@@ -1,11 +1,11 @@
 #include "memleak.h"
 
 
-static QHash<const void *, QString> allocs;
+static QHash<const void *, QPair<long, QString> > allocs;
 
 
-void allocated(const void * ptr, const QString & comment) {
-  allocs.insert(ptr, comment + "@" + QTime::currentTime().toString());
+void allocated(const void * ptr, long size, const QString & comment) {
+  allocs.insert(ptr, QPair<long, QString>(size, comment + "@" + QTime::currentTime().toString()));
 }
   
 
@@ -17,11 +17,11 @@ void freed(const void * ptr) {
 }
 
 void printAllocs() {
-  QHashIterator<const void *, QString> it(allocs);
+  QHashIterator<const void *, QPair<long, QString> > it(allocs);
   
   while (it.hasNext()) {
     it.next();
-    qDebug()<<"#"<<it.key()<<" "<<it.value();
+    qDebug()<<"#"<<it.key()<<" "<<it.value().first<<" "<<it.value().second;
   }
 }
 
