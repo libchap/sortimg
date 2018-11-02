@@ -47,8 +47,9 @@ protected:
   bool reInitialize(const QString & path);
 
   void disputeDefaultSCR(const FBIterator & accordingTo);
-  
+
   void viewCurrent();
+  bool refreshCurrent();
   void next();
   void prev();
 
@@ -57,13 +58,16 @@ protected:
   void targetResize();
   void markDelete();
   void markCrop();
+  void markRename(const QString &prefix);
 
   void rotateLeft();
   void rotateRight();
-  void increaseBrightness();
-  void decreaseBrightness();
+  void adjustBrightness(int sgn = +1);
 
   void finalizeResize();
+  
+  void setResizeAsDefault();
+  void applyResizeToAll();
 
   QString viewDirectoryDialog();
 
@@ -74,12 +78,18 @@ protected:
   FBIterator * main_iterator = NULL;
   ImageBuffer * ibuf = NULL;
 
-  ScaleCropRule scr; // this is the currently viewed scr
+  ScaleCropRule view_scr;
+  QString view_fname;
+  QSize view_origsize;
+  bool view_trash_zoom;
+  int default_vss;
+
 
 private:
 
   QLabel statusbar;
   bool welcomeShown = true;
+  bool renameMode = false;
 
 };
 

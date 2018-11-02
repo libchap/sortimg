@@ -66,6 +66,25 @@ bool FileBank::isMarkedAsDeleted(const QString & file) {
   return delFile.exists();
 }
 
+void FileBank::markRenamed(const QString & file, const QString & prefix) {
+  QString pFileName = srcDir.relativeFilePath(file);
+  qDebug() << "markRename" << pFileName;
+  QDirIterator pTRenamed(tmpDir.canonicalPath(), QStringList() << (pFileName + ".renamed_*"));
+  while (pTRenamed.hasNext()) {
+    QString rem = pTRenamed.next();
+    qDebug() << "rem " << rem;
+    tmpDir.remove(rem);
+  }
+
+  if (prefix != "") {
+    qDebug() << getTmpNameFor(file) + ".renamed_" + prefix;
+    QFile renFile(getTmpNameFor(file) + ".renamed_" + prefix);
+    renFile.open(QIODevice::WriteOnly | QIODevice::Text);
+    QTextStream renStream(&renFile);
+    renStream << "Following file is gonna be renamed to prefix " << prefix << ": " << file << "\n";
+    renFile.close();
+  }
+}
 
 // walk through tmpDir, find all the changes done by the user, and process them into dstDir
 // handle correctly both cases if dstDir is the same or different than srcDir
@@ -79,9 +98,11 @@ void FileBank::finalizeTmpDir() {
     QString pTName = tmpDir.absoluteFilePath(pFileName);
     QString pTDeleted = pTName + ".deleted";
     QString pDName = dstDir.absoluteFilePath(pFileName);
+    QDirIterator pTRenamed(tmpDir.canonicalPath(), QStringList() << (pFileName + ".renamed_*"));
     bool pTExists = QFile(pTName).exists();
     bool pTDExists = QFile(pTDeleted).exists();
     bool pDNExists = QFile(pDName).exists();
+    bool pTRExists = pTRenamed.hasNext();
 
     if ((pTExists || pTDExists) && pDNExists) dstDir.remove(pFileName);
     if (pTExists && !pTDExists) tmpDir.rename(pFileName, pDName);
@@ -89,6 +110,7 @@ void FileBank::finalizeTmpDir() {
     if (pTDExists) tmpDir.remove(pTDeleted);
     if (!sameStrDst && !pTDExists && !pTExists && pDNExists) dstDir.remove(pFileName);
     if (!sameStrDst && !pTDExists && !pTExists) QFile::copy(processed, pDName);
+    if (pTRExists && !pTDExists) dstDir.rename(pFileName, pTRenamed.next().right(1) + "_" + pFileName);
   }
 
   tmpDir.rmdir(".");
