@@ -105,7 +105,6 @@ void StupidExif::read_from_jpeg(const QString & jpegName) {
 	return; // success ? no, we don't wanna reach the end, rather return at first 0xffe1
       case 0xffff:
 	stupidexif_error(9003, PL);
-	//qDebug()<<"Maybe: "<<(tagOrientation == NULL ? 0 : 1)<<(tagXResolution == NULL ? 0 : 1)<<(tagYResolution == NULL ? 0 : 1);
 	return;
       case 0xffe1:
 	this->exifEndian = (read_endian(part + 10, 2, EINTEL) == 0x4949 ? EINTEL : EMOTOROLA);
@@ -119,7 +118,7 @@ void StupidExif::read_from_jpeg(const QString & jpegName) {
 	  this->exifData = part;
 	  initial_offset_delta = read_endian(part + 14, 4, exifEndian);
 	  decodeIFD(part + 18, initial_offset_delta); // success
-	  qDebug()<<"Success: "<<(tagOrientation == NULL ? 0 : 1)<<(tagXResolution == NULL ? 0 : 1)<<(tagYResolution == NULL ? 0 : 1);
+	  qDebug()<<"Success: "<<(tagOrientation1 == NULL ? 0 : 1)<<(tagXResolution == NULL ? 0 : 1)<<(tagYResolution == NULL ? 0 : 1);
 	}
 	return; // instead of break; we don't wanna have multiple exif parts
       default:
@@ -152,7 +151,10 @@ void StupidExif::decodeIFD(PBYTE ifd, long offset_delta) {
     if (item_tag == 0x8769) {
       decodeIFD(ifd - offset_delta + item_data, offset_delta - item_data);
     }
-    if (item_tag == 0x0112) this->tagOrientation = ifd_item + 8;
+    if (item_tag == 0x0112) {
+      if (this->tagOrientation1 == NULL) this->tagOrientation1 = ifd_item + 8;
+      else                               this->tagOrientation2 = ifd_item + 8;
+    }
     if (item_tag == 0xa002) this->tagXResolution = ifd_item + 8;
     if (item_tag == 0xa003) this->tagYResolution = ifd_item + 8;
   }
@@ -234,10 +236,11 @@ void StupidExif::insert_into_jpeg(const QString & jpegName) const {
 
 // interface for manipulation with the important tags stored only as pointers to endian-encoded values in PBYTE array
 int StupidExif::getTagOrientation() const {
-  return (tagOrientation == NULL ? 0 : read_endian(tagOrientation, 2, exifEndian));
+  return (tagOrientation1 == NULL ? 0 : read_endian(tagOrientation1, 2, exifEndian));
 }
 void StupidExif::setTagOrientation(int x) {
-  if (tagOrientation != NULL) write_endian(x, tagOrientation, 2, exifEndian);
+  if (tagOrientation1 != NULL) write_endian(x, tagOrientation1, 2, exifEndian);
+  if (tagOrientation2 != NULL) write_endian(x, tagOrientation2, 2, exifEndian);
 }
 int StupidExif::getTagXResolution() const {
   return (tagXResolution == NULL ? 0 : read_endian(tagXResolution, 2, exifEndian));
@@ -262,7 +265,8 @@ int StupidExif::getExifDataLen() const {
 StupidExif & StupidExif::se_copy_from(const StupidExif & se) {
   exifEndian = se.exifEndian;
   exifData = NULL;
-  tagOrientation = NULL;
+  tagOrientation1 = NULL;
+  tagOrientation2 = NULL;
   tagXResolution = NULL;
   tagYResolution = NULL;
   //int i;
@@ -274,7 +278,8 @@ StupidExif & StupidExif::se_copy_from(const StupidExif & se) {
     if (exifData != NULL) {
       memcpy(exifData, se.exifData, edlen);
       //for (i = 0; i < edlen; i++) exifData[i] = se.exifData[i];
-      if (se.tagOrientation != NULL) tagOrientation = exifData + (se.tagOrientation - se.exifData);
+      if (se.tagOrientation1 != NULL) tagOrientation1 = exifData + (se.tagOrientation1 - se.exifData);
+      if (se.tagOrientation2 != NULL) tagOrientation2 = exifData + (se.tagOrientation2 - se.exifData);
       if (se.tagXResolution != NULL) tagXResolution = exifData + (se.tagXResolution - se.exifData);
       if (se.tagYResolution != NULL) tagYResolution = exifData + (se.tagYResolution - se.exifData);
     }
