@@ -53,7 +53,8 @@ private:
 
   ENDIAN exifEndian;
   PBYTE exifData = NULL;
-  PBYTE tagOrientation = NULL;
+  PBYTE tagOrientation1 = NULL;
+  PBYTE tagOrientation2 = NULL;
   PBYTE tagXResolution = NULL;
   PBYTE tagYResolution = NULL;
 
