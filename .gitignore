@@ -1,5 +1,8 @@
 sortimg
+lconvert
 *.o
 moc_*.cpp
 qrc_*.cpp
 Makefile
+Makefile.bin_sortimg
+Makefile.bin_lconvert

@@ -4,6 +4,29 @@
 // using std::min;
 // using std::max;
 
+
+// QSize to QString user readable representation
+QString size2string(const QSize & s) {
+  if (s.isValid()) {
+    QString str;
+    return str.sprintf("%dx%d", s.width(), s.height());
+  }
+  else return "InvalidSize";
+}
+// reverse
+bool string2size(const QString & s, QSize * r) {
+  if (s == "InvalidSize") {
+    *r = QSize();
+    return true;
+  }
+  QStringList ss = s.split('x');
+  if (ss.size() != 2) return false;
+  r->setWidth(ss.at(0).toInt());
+  r->setHeight(ss.at(1).toInt());
+  return true;
+}
+
+
 // counter-clockwise
 static QImage * rotate90(const QImage * src) {
     QImage * dst = new QImage(src->height(), src->width(), src->format());
