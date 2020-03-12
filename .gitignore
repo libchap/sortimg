@@ -2,7 +2,9 @@ sortimg
 lconvert
 *.o
 moc_*.cpp
+moc_*.h
 qrc_*.cpp
 Makefile
 Makefile.bin_sortimg
 Makefile.bin_lconvert
+.qmake.stash

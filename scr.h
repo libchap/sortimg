@@ -27,6 +27,7 @@ struct ScaleCropRule {
   int rotate = 0;
 
   int brightness = +0;
+  int gamma = 100;
 
   bool operator==(const ScaleCropRule & s) const;
   bool operator!=(const ScaleCropRule & s) const { return !(*this == s); }

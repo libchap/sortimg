@@ -12,6 +12,7 @@
 #define si_settings_preload_zooms 3
 // how many rescales pre-do when in/decreasing brightness
 #define si_settings_preload_brightness 3
+#define si_settings_preload_gamma 3
 
 // quantity parameters of the effect of mouse wheel zooming
 #define si_settings_mousewheel_zoom_base 1.02
@@ -33,7 +34,7 @@
 
 // quantity parameters for color changes
 #define si_settings_brightness_step 4
-
+#define si_settings_gamma_step 5
 
 #include <QString>
 #include <QSize>

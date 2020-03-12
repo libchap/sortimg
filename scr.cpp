@@ -9,17 +9,17 @@ using std::swap;
 // both user readable and unique for each SCR (usable as a map key)
 QString ScaleCropRule::toString() const {
   QString res;
-  if (hasTarget()) res.sprintf("ScaleCropRule Rotate=%d; Scale: %dx%d, Crop %dx%d at %d:%d; Brightness=%+d%%",
+  if (hasTarget()) res.sprintf("ScaleCropRule Rotate=%d; Scale: %dx%d, Crop %dx%d at %d:%d; Brightness=%+d%%; Gamma=%d",
                                rotate, int (target_w * resize_w), int(target_h * resize_h), target_w, target_h,
-                               int(target_w * crop_x), int(target_h * crop_y), brightness);
-  else res.sprintf("ScaleCropRule just Rotate=%d; Brightness=%+d", rotate, brightness);
+                               int(target_w * crop_x), int(target_h * crop_y), brightness, gamma);
+  else res.sprintf("ScaleCropRule just Rotate=%d; Brightness=%+d; Gamma=%d", rotate, brightness, gamma);
   return res;
 }
 
 bool ScaleCropRule::operator==(const ScaleCropRule & s) const {
   return (resize_w == s.resize_w && resize_h == s.resize_w && crop_x == s.crop_x &&
           crop_y == s.crop_y && target_w == s.target_w && target_h == s.target_h &&
-          rotate == s.rotate && brightness == s.brightness);
+          rotate == s.rotate && brightness == s.brightness && gamma == s.gamma);
 }
 
 // short vague user readable description, not unique
@@ -31,6 +31,7 @@ QString ScaleCropRule::toShortString() const {
     if (!isJustResize()) res += "and Crop ";
   }
   if (brightness != 0) res += "and Color correction";
+  if (gamma != 100) res += " and Gamma correction";
   return res;
 }
 

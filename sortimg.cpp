@@ -148,6 +148,12 @@ void SortImg::keyPressEvent(QKeyEvent * event) {
     case Qt::Key_Period:
       adjustBrightness(-1);
       break;
+    case Qt::Key_U:
+      adjustGamma(+1);
+      break;
+    case Qt::Key_I:
+      adjustGamma(-1);
+      break;
     case Qt::Key_Delete:
       markDelete();
       break;
@@ -350,8 +356,24 @@ void SortImg::adjustBrightness(int sgn) {
 
   ScaleCropRule futurescr(view_scr);
   futurescr.retarget(pixmapViewer.size());
-  for (int i = 1; i <= si_settings_preload_zooms; i++) {
+  for (int i = 1; i <= si_settings_preload_brightness; i++) {
     futurescr.brightness += amount;
+    ibuf->prepareRescale(view_fname, futurescr);
+  }
+}
+
+void SortImg::adjustGamma(int sgn) {
+  if (main_iterator == NULL || ibuf == NULL) return;
+
+  int amount = sgn * si_settings_gamma_step;
+
+  view_scr.gamma += amount;
+  refreshCurrent();
+
+  ScaleCropRule futurescr(view_scr);
+  futurescr.retarget(pixmapViewer.size());
+  for (int i = 1; i <= si_settings_preload_gamma; i++) {
+    futurescr.gamma += amount;
     ibuf->prepareRescale(view_fname, futurescr);
   }
 }

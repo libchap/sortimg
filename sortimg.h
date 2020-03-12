@@ -63,6 +63,7 @@ protected:
   void rotateLeft();
   void rotateRight();
   void adjustBrightness(int sgn = +1);
+  void adjustGamma(int sgn = +1);
 
   void finalizeResize();
   

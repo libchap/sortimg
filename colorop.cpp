@@ -107,7 +107,7 @@ QImage changeBrightness( const QImage& image, int brightness )
     return changeImage< changeBrightness >( image, brightness );
     }
 
-/* // not needed now
+
 // contrast is multiplied by 100 in order to avoid floating point numbers
 QImage changeContrast( const QImage& image, int contrast )
     {
@@ -123,4 +123,3 @@ QImage changeGamma( const QImage& image, int gamma )
         return image;
     return changeImage< changeGamma >( image, gamma );
     }
-    */

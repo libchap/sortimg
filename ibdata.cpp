@@ -174,7 +174,8 @@ static QImage * scaleCropImage(QFuture<QImage *> & futureOriginal, ScaleCropRule
   }
   QRect basecr = scr.cropRect();
   QImage cropped1 = scaled.copy(basecr);
-  QImage colored = changeBrightness(cropped1, scr.brightness);
+  QImage colored_ = changeBrightness(cropped1, scr.brightness);
+  QImage colored = changeGamma(colored_, scr.gamma);
   QImage * the_result = new QImage(colored);
   allocated(the_result, sizeof(QImage), "cropped");
   //qDebug()<<"scaled: "<<size2string(scaled.size())<<" ; rect: "<<cr.x()<<":"<<cr.y()<<"/"<<size2string(cr.size())<<" ; cropped1: "<<size2string(cropped1.size());
