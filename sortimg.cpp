@@ -166,10 +166,10 @@ void SortImg::wheelEvent(QWheelEvent * event) {
   QMainWindow::wheelEvent(event);
   if (ibuf == NULL || main_iterator == NULL) return;
 
-  double x = (event->x() - pixmapViewer.x()) / (double) pixmapViewer.width();
-  double y = (event->y() - pixmapViewer.y()) / (double) pixmapViewer.height();
+  double x = (event->position().x() - pixmapViewer.x()) / (double) pixmapViewer.width();
+  double y = (event->position().y() - pixmapViewer.y()) / (double) pixmapViewer.height();
 
-  double mydelta = double(event->delta()) / si_settings_mousewheel_step_base;
+  double mydelta = double(event->angleDelta().y()) / si_settings_mousewheel_step_base;
   double ratio = pow(si_settings_mousewheel_zoom_base, mydelta);
   //qDebug() << "Zooming to ratio " << ratio << " (mydelta " << mydelta << ")";
 

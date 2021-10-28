@@ -8,12 +8,10 @@ using std::swap;
 // return string representation
 // both user readable and unique for each SCR (usable as a map key)
 QString ScaleCropRule::toString() const {
-  QString res;
-  if (hasTarget()) res.sprintf("ScaleCropRule Rotate=%d; Scale: %dx%d, Crop %dx%d at %d:%d; Brightness=%+d%%; Gamma=%d",
-                               rotate, int (target_w * resize_w), int(target_h * resize_h), target_w, target_h,
-                               int(target_w * crop_x), int(target_h * crop_y), brightness, gamma);
-  else res.sprintf("ScaleCropRule just Rotate=%d; Brightness=%+d; Gamma=%d", rotate, brightness, gamma);
-  return res;
+  if (hasTarget()) return QString::asprintf("ScaleCropRule Rotate=%d; Scale: %dx%d, Crop %dx%d at %d:%d; Brightness=%+d%%; Gamma=%d",
+                                            rotate, int (target_w * resize_w), int(target_h * resize_h), target_w, target_h,
+                                            int(target_w * crop_x), int(target_h * crop_y), brightness, gamma);
+  else return QString::asprintf("ScaleCropRule just Rotate=%d; Brightness=%+d; Gamma=%d", rotate, brightness, gamma);
 }
 
 bool ScaleCropRule::operator==(const ScaleCropRule & s) const {

@@ -6,7 +6,7 @@ QString createTmpDir(const char * keyword = "sortimg") {
   QString temp_dirname;
   int i = 0;
   do {
-    temp_dirname.sprintf("%s%04d", keyword, i++);
+    temp_dirname = QString::asprintf("%s%04d", keyword, i++);
   } while (!temp_parent.mkdir(temp_dirname));
   return temp_parent.absoluteFilePath(temp_dirname);
 }

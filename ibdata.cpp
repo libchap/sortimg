@@ -8,8 +8,7 @@
 // QSize to QString user readable representation
 QString size2string(const QSize & s) {
   if (s.isValid()) {
-    QString str;
-    return str.sprintf("%dx%d", s.width(), s.height());
+    return QString::asprintf("%dx%d", s.width(), s.height());
   }
   else return "InvalidSize";
 }
