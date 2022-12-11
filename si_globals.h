@@ -18,13 +18,14 @@
 #define si_settings_mousewheel_zoom_base 1.02
 #define si_settings_mousewheel_step_base 40
 
-// the target pixel size when marking the resize with keyboard key A (..F rescpectively)
+// the target pixel size when marking the resize with keyboard key A (..G rescpectively)
 #define si_settings_size_A 800
 #define si_settings_size_B 1024
 #define si_settings_size_C 1200
 #define si_settings_size_D 1600
 #define si_settings_size_E 1800
 #define si_settings_size_F 1900
+#define si_settings_size_G 2400
 
 // initial coords of the program window
 #define si_settings_initial_width 1440

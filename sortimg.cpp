@@ -113,6 +113,9 @@ void SortImg::keyPressEvent(QKeyEvent * event) {
     case Qt::Key_F:
       markResize(si_settings_size_F);
       break;
+    case Qt::Key_G:
+      markResize(si_settings_size_G);
+      break;
     case Qt::Key_X:
       markCrop();
       break;
