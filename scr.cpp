@@ -25,7 +25,7 @@ QString ScaleCropRule::toShortString() const {
   QString res;
   if (rotate != 0) res += "Rotate, ";
   if (hasTarget()) {
-    res += "Scale ";
+    res += QString("Scale %1x%2 ").arg(target_w).arg(target_h);
     if (!isJustResize()) res += "and Crop ";
   }
   if (brightness != 0) res += "and Color correction";
