@@ -47,9 +47,9 @@ void SortImg::keyPressEvent(QKeyEvent * event) {
   QMainWindow::keyPressEvent(event);
 
   if (renameMode) {
-    //if (event->key() >= Qt::Key_A && event->key() <= Qt::Key_Z) {
+    if (event->key() >= Qt::Key_A && event->key() <= Qt::Key_Z) {
       markRename(event->text());
-    //}
+    }
     renameMode = false;
     return;
   }
