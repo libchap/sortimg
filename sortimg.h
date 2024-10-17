@@ -51,6 +51,7 @@ protected:
   void viewCurrent();
   bool refreshCurrent();
   void next();
+  void next_big();
   void prev();
 
   int targetSize = 0;

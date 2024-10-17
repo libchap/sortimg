@@ -85,7 +85,12 @@ void SortImg::keyPressEvent(QKeyEvent * event) {
   // switch 2, see switch 1 above
   switch (event->key()) {
     case Qt::Key_Right:
-      next();
+      if (event->modifiers() & Qt::ShiftModifier) {
+	    next_big();
+	  }
+	  else {
+	    next();
+	  }
       break;
     case Qt::Key_Left:
       prev();
@@ -296,6 +301,23 @@ void SortImg::next() {
   FBIterator toAdd = main_iterator->next_get(si_settings_preload_images_min);
   ibuf->addImage(*toAdd);
 
+  viewCurrent();
+}
+
+void SortImg::next_big() {
+  if (fbank == NULL || ibuf == NULL || main_iterator == NULL) return;
+
+  if (!main_iterator->hasNext()) return;
+
+  targetResize();
+
+  do {
+    ibuf->removeImage(*main_iterator->prev_get(si_settings_preload_images_max));
+    main_iterator->next_go();
+    ibuf->addImage(**main_iterator);
+  } while (ibuf->getOriginalSize(**main_iterator).height() <= si_settings_big_height);
+
+  ibuf->addRange(main_iterator->subiterator_post(si_settings_preload_images_min));
   viewCurrent();
 }
 

@@ -18,6 +18,9 @@
 #define si_settings_mousewheel_zoom_base 1.02
 #define si_settings_mousewheel_step_base 40
 
+// "next big" image must have height more that this
+#define si_settings_big_height 1800
+
 // the target pixel size when marking the resize with keyboard key A (..G rescpectively)
 #define si_settings_size_A 800
 #define si_settings_size_B 1024
